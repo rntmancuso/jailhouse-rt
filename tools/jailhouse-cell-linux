@@ -510,14 +510,15 @@ class MemoryRegion:
     E820_RAM = 1
     E820_RESERVED = 2
 
-    _REGION_FORMAT = 'QQQQ'
+    _REGION_FORMAT = 'QQQQQ'
     SIZE = struct.calcsize(_REGION_FORMAT)
 
     def __init__(self, region_struct):
         (self.phys_start,
          self.virt_start,
          self.size,
-         self.flags) = \
+         self.flags,
+         self.colors) = \
             struct.unpack_from(MemoryRegion._REGION_FORMAT, region_struct)
 
     def is_ram(self):
