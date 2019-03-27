@@ -789,6 +789,69 @@ static int cell_get_state(struct per_cpu *cpu_data, unsigned long id)
 	return -ENOENT;
 }
 
+/*
+ * Map to the root cell a colored region for loading images.
+ * This region will be seen as a contiguous memory from the root cell.
+ *
+ * N.B: it is assumed that the invocations are made with alternated
+ * @param map that must always start from true.
+ */
+static int cell_load_colored(struct per_cpu *cpu_data,
+		unsigned long mem_address, bool map)
+{
+	unsigned long mem_page_offs = mem_address & ~PAGE_MASK;
+	unsigned int mem_pages;
+	struct jailhouse_memory *col_mem;
+	void *mem_mapping;
+	int err = 0;
+
+	/* We do not support management over non-root cells. */
+	if (cpu_data->public.cell != &root_cell)
+		return -EPERM;
+
+	cell_suspend(&root_cell);
+
+	if (!cell_reconfig_ok(NULL)) {
+		err = -EPERM;
+		goto err_resume;
+	}
+
+	mem_pages = PAGES(mem_page_offs + sizeof(struct jailhouse_memory));
+	mem_mapping = paging_get_guest_pages(NULL, mem_address, mem_pages,
+					     PAGE_DEFAULT_FLAGS);
+
+	if (!mem_mapping) {
+		err = -ENOMEM;
+		goto err_resume;
+	}
+
+	col_mem = (struct jailhouse_memory *)(mem_mapping + mem_page_offs);
+	col_mem->phys_start = col_mem->virt_start;
+
+	if (map) {
+		col_mem->flags |= JAILHOUSE_MEM_COLORED_CELL;
+		col_mem->flags |= JAILHOUSE_MEM_COLORED_LOAD;
+
+		err = arch_map_memory_region(&root_cell, col_mem);
+	} else {
+		col_mem->flags &= ~JAILHOUSE_MEM_COLORED_CELL;
+		col_mem->flags &= ~JAILHOUSE_MEM_COLORED_LOAD;
+
+		// Destroy old mapping
+		err = arch_unmap_memory_region(&root_cell, col_mem);
+		if (err)
+			goto err_resume;
+
+		// Restore previuous mapping
+		err = arch_map_memory_region(&root_cell, col_mem);
+	}
+
+err_resume:
+	cell_resume(&root_cell);
+
+	return err;
+}
+
 /**
  * Perform all CPU-unrelated hypervisor shutdown steps.
  */
@@ -970,6 +1033,8 @@ long hypercall(unsigned long code, unsigned long arg1, unsigned long arg2)
 			return trace_error(-EPERM);
 		printk("%c", (char)arg1);
 		return 0;
+	case JAILHOUSE_HC_CELL_LOAD_COL:
+		return cell_load_colored(cpu_data, arg1, (bool)arg2);
 	default:
 		return -ENOSYS;
 	}
