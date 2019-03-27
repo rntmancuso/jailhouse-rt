@@ -49,6 +49,7 @@
 #include "main.h"
 #include "pci.h"
 #include "sysfs.h"
+#include "coloring.h"
 
 #include <jailhouse/header.h>
 #include <jailhouse/hypercall.h>
@@ -556,6 +557,8 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 	err = jailhouse_cell_prepare_root(&config->root_cell);
 	if (err)
 		goto error_unmap;
+
+	jailhouse_coloring_init(config->platform_info.llc_way_size);
 
 	error_code = 0;
 

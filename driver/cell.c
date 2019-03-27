@@ -20,6 +20,7 @@
 #include "main.h"
 #include "pci.h"
 #include "sysfs.h"
+#include "coloring.h"
 
 #include <jailhouse/hypercall.h>
 
@@ -82,6 +83,13 @@ retry:
 
 	memcpy(cell->memory_regions, jailhouse_cell_mem_regions(cell_desc),
 	       sizeof(struct jailhouse_memory) * cell->num_memory_regions);
+
+	err = jailhouse_coloring_cell_setup(cell, cell_desc);
+	if (err) {
+		vfree(cell->memory_regions);
+		kfree(cell);
+		return ERR_PTR(err);
+	}
 
 	err = jailhouse_pci_cell_setup(cell, cell_desc);
 	if (err) {
@@ -305,6 +313,8 @@ static int load_image(struct cell *cell,
 	unsigned int regions, page_offs;
 	u64 image_offset, phys_start;
 	void *image_mem;
+	unsigned long next_phys, next_virt;
+	struct jailhouse_memory *col_mem;
 	int err = 0;
 
 	if (copy_from_user(&image, uimage, sizeof(image)))
@@ -330,13 +340,46 @@ static int load_image(struct cell *cell,
 
 	phys_start = (mem->phys_start + image_offset) & PAGE_MASK;
 	page_offs = offset_in_page(image_offset);
-	image_mem = jailhouse_ioremap(phys_start, 0,
+
+	col_mem = kmalloc(sizeof(struct jailhouse_memory),
+		GFP_USER | __GFP_NOWARN);
+
+	if (mem->flags & JAILHOUSE_MEM_COLORED_CELL) {
+		next_phys = driver_next_colored(mem->phys_start, mem->colors);
+		next_virt = mem->virt_start;
+
+		// Find physical start address based on the image target address
+		// and the colored configuration
+		while (next_virt != image.target_address) {
+			next_phys += PAGE_SIZE;
+			next_virt += PAGE_SIZE;
+			next_phys = driver_next_colored(next_phys, mem->colors);
+		}
+
+		memcpy(col_mem, (void *)mem, sizeof(struct jailhouse_memory));
+
+		col_mem->size = PAGE_ALIGN(image.size + page_offs);
+		col_mem->virt_start = next_phys;
+		phys_start = next_phys;
+
+		/*
+		 * Map a colored region that will be seen as contiguous by the
+		 * root cell so that we can use the usual load logic that
+		 * assumes to manage contiguous regions.
+		 */
+		err = jailhouse_call_arg2(JAILHOUSE_HC_CELL_LOAD_COL,
+				__pa(col_mem), true);
+		if (err)
+			goto kfree_out;
+	}
+		image_mem = jailhouse_ioremap(phys_start, 0,
 				      PAGE_ALIGN(image.size + page_offs));
 	if (!image_mem) {
 		pr_err("jailhouse: Unable to map cell RAM at %08llx "
 		       "for image loading\n",
 		       (unsigned long long)(mem->phys_start + image_offset));
-		return -EBUSY;
+		err = -EBUSY;
+		goto kfree_out;
 	}
 
 	if (copy_from_user(image_mem + page_offs,
@@ -359,6 +402,14 @@ static int load_image(struct cell *cell,
 
 	vunmap(image_mem);
 
+	// Destroy colored mapping and restore previous state
+	if (mem->flags & JAILHOUSE_MEM_COLORED_CELL)
+		err = jailhouse_call_arg2(JAILHOUSE_HC_CELL_LOAD_COL,
+				__pa(col_mem), false);
+
+kfree_out:
+	kfree(col_mem);
+
 	return err;
 }
 
@@ -378,6 +429,7 @@ int jailhouse_cmd_cell_load(struct jailhouse_cell_load __user *arg)
 		return err;
 
 	err = jailhouse_call_arg1(JAILHOUSE_HC_CELL_SET_LOADABLE, cell->id);
+
 	if (err)
 		goto unlock_out;
 
