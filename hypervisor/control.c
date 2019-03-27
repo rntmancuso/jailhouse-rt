@@ -343,6 +343,18 @@ static int remap_to_root_cell(const struct jailhouse_memory *mem,
 			overlap.phys_start - root_mem->phys_start;
 		overlap.flags = root_mem->flags;
 
+		/**
+		 * If the memory region to remap is colored, modify the overlap
+		 * memory region so that it is mapped correclty.
+		 */
+		if (mem->flags & JAILHOUSE_MEM_COLORED_CELL) {
+			overlap.phys_start = mem->phys_start;
+			overlap.virt_start = mem->phys_start;
+			overlap.size = mem->size;
+			overlap.colors = mem->colors;
+			overlap.flags |= JAILHOUSE_MEM_COLORED_CELL;
+		}
+
 		if (JAILHOUSE_MEMORY_IS_SUBPAGE(&overlap))
 			err = mmio_subpage_register(&root_cell, &overlap);
 		else

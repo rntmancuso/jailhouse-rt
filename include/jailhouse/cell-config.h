@@ -113,6 +113,9 @@ struct jailhouse_cell_desc {
 #define JAILHOUSE_MEM_LOADABLE		0x0040
 #define JAILHOUSE_MEM_ROOTSHARED	0x0080
 #define JAILHOUSE_MEM_IO_UNALIGNED	0x0100
+#define JAILHOUSE_MEM_COLORED		0x0200
+#define JAILHOUSE_MEM_COLORED_CELL	0x0400
+#define JAILHOUSE_MEM_COLORED_LOAD	0x0800
 #define JAILHOUSE_MEM_IO_WIDTH_SHIFT	16 /* uses bits 16..19 */
 #define JAILHOUSE_MEM_IO_8		(1 << JAILHOUSE_MEM_IO_WIDTH_SHIFT)
 #define JAILHOUSE_MEM_IO_16		(2 << JAILHOUSE_MEM_IO_WIDTH_SHIFT)
@@ -124,6 +127,7 @@ struct jailhouse_memory {
 	__u64 virt_start;
 	__u64 size;
 	__u64 flags;
+	__u64 colors;
 } __attribute__((packed));
 
 #define JAILHOUSE_MEMORY_IS_SUBPAGE(mem)	\
@@ -232,6 +236,11 @@ struct jailhouse_system {
 		__u8 pci_mmconfig_end_bus;
 		__u8 pci_is_virtual;
 		__u16 pci_domain;
+		/*
+		 * Size (B) of each way of the last-level
+		 * cache where coloring takes place
+		 */
+		u64 llc_way_size;
 		union {
 			struct {
 				__u16 pm_timer_address;

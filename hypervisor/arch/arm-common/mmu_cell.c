@@ -37,15 +37,34 @@ int arch_map_memory_region(struct cell *cell,
 		flags |= S2_PAGE_ACCESS_XN;
 	*/
 
-	return paging_create(&cell->arch.mm, phys_start, mem->size,
-			     mem->virt_start, flags, PAGING_COHERENT);
+	if (mem->flags & JAILHOUSE_MEM_COLORED_CELL) {
+		bool remap = (cell == &root_cell) &&
+			!(mem->flags & JAILHOUSE_MEM_COLORED_LOAD);
+
+		return paging_create_colored(&cell->arch.mm, phys_start,
+				mem->size, mem->virt_start, flags, mem->colors,
+				PAGING_COHERENT, remap);
+	} else
+		return paging_create(&cell->arch.mm, phys_start, mem->size,
+				mem->virt_start, flags, PAGING_COHERENT);
 }
 
 int arch_unmap_memory_region(struct cell *cell,
 			     const struct jailhouse_memory *mem)
 {
-	return paging_destroy(&cell->arch.mm, mem->virt_start, mem->size,
-			      PAGING_COHERENT);
+	/*
+	 * Do not be confused -- since paging_destroy* acts on virtual
+	 * addresses, paging_destroy can be physically colored, too.
+	 * We need to destroy the mapping using coloring only when unmapping
+	 * from the root cell so that the correct regions are removed and
+	 * then used from the cells.
+	 */
+	if (mem->flags & JAILHOUSE_MEM_COLORED_CELL && (cell == &root_cell))
+		return paging_destroy_colored(&cell->arch.mm, mem->virt_start,
+				mem->size, mem->colors, PAGING_COHERENT);
+	else
+		return paging_destroy(&cell->arch.mm, mem->virt_start,
+			mem->size, PAGING_COHERENT);
 }
 
 unsigned long arch_paging_gphys2phys(unsigned long gphys, unsigned long flags)

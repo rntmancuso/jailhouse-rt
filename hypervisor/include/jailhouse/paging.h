@@ -162,6 +162,8 @@ struct paging_structures {
 	/** Reference to root-level page table, ignored if root_paging is NULL.
 	 */
 	page_table_t root_table;
+	/** Do care bits for coloring, ignored if hv_paging is false. */
+	unsigned int addr_col_mask;
 };
 
 /**
@@ -246,6 +248,15 @@ int paging_create(const struct paging_structures *pg_structs,
 int paging_destroy(const struct paging_structures *pg_structs,
 		   unsigned long virt, unsigned long size,
 		   enum paging_coherent coherent);
+
+int paging_create_colored(const struct paging_structures *pg_structs,
+		unsigned long phys, unsigned long size, unsigned long virt,
+		unsigned long flags, unsigned long col_val,
+		enum paging_coherent coherent, bool remap_root);
+
+int paging_destroy_colored(const struct paging_structures *pg_structs,
+		unsigned long virt, unsigned long size, unsigned long col_val,
+		enum paging_coherent coherent);
 
 void *paging_map_device(unsigned long phys, unsigned long size);
 void paging_unmap_device(unsigned long phys, void *virt, unsigned long size);
