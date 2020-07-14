@@ -384,3 +384,25 @@ The corresponding test to apic-demo on x86 is the gic-demo:
     jailhouse cell create /path/to/qemu-arm64-inmate-demo.cell
     jailhouse cell load inmate-demo /path/to/gic-demo.bin
     jailhouse cell start inmate-demo
+
+
+Real-time Support (BU)
+---------------------------
+
+This version of Jailhouse is enhanced with important features to make
+Jailhouse a good partitioning hypervisor for real-time systems on
+multi-core platforms. The following is a list of features that are
+additions to the stock version of the hypervisor:
+
+   - Support for memory bandwidth regulation via MemGuard;
+   - Support for cache coloring of inmates
+   - Support for dynamic cache coloring of the root cell
+   - Support for ARM QoS regulation at the NIC
+   - Support for NXP S32V234 target
+   - Integrated management of SMMU and cache coloring (for supported SMMUs)
+      - ZCU102
+      - NVIDIA Tegra TX1 (WiP)
+      - NVIDIA Tegra TX2 (NEXT)
+   - Inamte for DDR traffic profiling for supported targets (S32V234 and ZCU102)
+
+
