@@ -27,14 +27,14 @@ struct {
 		.signature = JAILHOUSE_CELL_DESC_SIGNATURE,
 		.revision = JAILHOUSE_CONFIG_REVISION,
 		.name = "uart-demo",
-		.flags = JAILHOUSE_CELL_PASSIVE_COMMREG | JAILHOUSE_CELL_DEBUG_CONSOLE,
+		.flags = JAILHOUSE_CELL_PASSIVE_COMMREG,
 
 		.cpu_set_size = sizeof(config.cpus),
 		.num_memory_regions = ARRAY_SIZE(config.mem_regions),
 		.num_irqchips = 0,
-		.pio_bitmap_size = 0,
+		.num_pio_regions = 0,
 		.num_pci_devices = 0,
-	},
+    },
 
 	.cpus = {
 		0x8,

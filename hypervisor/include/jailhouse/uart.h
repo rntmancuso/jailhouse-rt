@@ -25,6 +25,11 @@ struct uart_chip {
 	void (*init)(struct uart_chip *chip);
 	bool (*is_busy)(struct uart_chip *chip);
 	void (*write_char)(struct uart_chip *chip, char c);
+
+	/* Additional driver functions if mode switch requried between
+	 * linux and jailhouse */
+	void (*hyp_mode_enter)(struct uart_chip *chip);
+	void (*hyp_mode_leave)(struct uart_chip *chip);
 };
 
 void uart_write(const char *msg);

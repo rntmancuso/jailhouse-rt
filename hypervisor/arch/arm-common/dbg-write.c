@@ -38,6 +38,8 @@ void arch_dbg_write_init(void)
 		uart = &uart_scifa_ops;
 	else if (con_type == JAILHOUSE_CON_TYPE_IMX)
 		uart = &uart_imx_ops;
+	else if (con_type == JAILHOUSE_CON_TYPE_S32)
+		uart = &uart_s32_ops;
 
 	if (uart) {
 		uart->debug_console = &system_config->debug_console;

@@ -19,18 +19,17 @@
 #include <jailhouse/types.h>
 #include <jailhouse/cell-config.h>
 
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[8];
+	struct jailhouse_memory mem_regions[11];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[1];
 } __attribute__((packed)) config = {
 	.header = {
 		.signature = JAILHOUSE_SYSTEM_SIGNATURE,
 		.revision = JAILHOUSE_CONFIG_REVISION,
+		.flags = JAILHOUSE_SYS_VIRTUAL_DEBUG_CONSOLE,
 		.hypervisor_memory = {
 			.phys_start = 0xfc000000,
 			.size = 0x3f00000,
@@ -38,10 +37,9 @@ struct {
 		.debug_console = {
 			.address = 0x40053000,
 			.size = 0x1000,
-			.flags = JAILHOUSE_CON1_TYPE_S32 |
-			         JAILHOUSE_CON1_ACCESS_MMIO |
-				 JAILHOUSE_CON1_REGDIST_4 |
-			         JAILHOUSE_CON2_TYPE_ROOTPAGE,
+			.flags = JAILHOUSE_CON_TYPE_S32 |
+			         JAILHOUSE_CON_ACCESS_MMIO |
+			         JAILHOUSE_CON_REGDIST_4,
 		},
 		.platform_info = {
 			.pci_mmconfig_base = 0x7e100000,
@@ -80,6 +78,8 @@ struct {
 
 
 	.mem_regions = {
+		/* IVSHMEM shared memory region for 0001:00:00.0 */
+		JAILHOUSE_SHMEM_NET_REGIONS(0xfff00000, 0),
 
 		/* MMIO (permissive) */ {
 			.phys_start = 0x40000000,
@@ -135,12 +135,6 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
 		},
-		/* IVSHMEM shared memory region */ {
-			.phys_start = 0xfff00000,
-			.virt_start = 0xfff00000,
-			.size =       0x00100000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
-		},
 	},
 	.irqchips = {
 		/* GIC */ {
@@ -161,7 +155,9 @@ struct {
 				0xffffff00, 0xffffffff, 0x00000000,
 				0x00000000, 0x00000000, 0x00000000,
 			},
-			.shmem_region = 7,
+			.shmem_regions_start = 0,
+			.shmem_dev_id = 0,
+			.shmem_peers = 1,
 			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
 		},
 	},
