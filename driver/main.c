@@ -150,6 +150,80 @@ static void init_hypercall(void)
 }
 #endif
 
+#ifdef CONFIG_REQUIRES_PSCI_EMULATION
+/* On some ARM64 SoCs, there might not be a PSCI firmware
+ * available. Without this, Linux won't be able to bring CPUs
+ * online/offline, which hinders the creation of cells. The jailhouse
+ * hypervisor implements PSCI emulation, so all we need to do is to
+ * implement missing spin-table functions with PSCI calls. */
+static unsigned long __invoke_psci_fn_smc(unsigned long function_id,
+					  unsigned long arg0, unsigned long arg1,
+					  unsigned long arg2)
+{
+    struct arm_smccc_res res;
+
+    arm_smccc_smc(function_id, arg0, arg1, arg2, 0, 0, 0, 0, &res);
+    return res.a0;
+}
+
+static int psci_to_linux_errno(int errno)
+{
+    switch (errno) {
+    case PSCI_RET_SUCCESS:
+	return 0;
+    case PSCI_RET_NOT_SUPPORTED:
+	return -EOPNOTSUPP;
+    case PSCI_RET_INVALID_PARAMS:
+    case PSCI_RET_INVALID_ADDRESS:
+	return -EINVAL;
+    case PSCI_RET_DENIED:
+	return -EPERM;
+    };
+
+    return -EINVAL;
+}
+
+static void jh_cpu_off(unsigned int cpu)
+{
+    int err;
+    u32 fn;
+
+    u32 state = PSCI_POWER_STATE_TYPE_POWER_DOWN <<
+	PSCI_0_2_POWER_STATE_TYPE_SHIFT;
+    
+    fn = PSCI_0_2_FN_CPU_OFF;
+    
+    err = __invoke_psci_fn_smc(fn, state, 0, 0);
+    err = psci_to_linux_errno(err);
+    
+    pr_crit("unable to power off CPU%u (%d)\n", cpu, err);
+}
+
+static int jh_cpu_disable(unsigned int cpu)
+{
+    return 0;
+}
+
+static int jh_cpu_kill(unsigned int cpu)
+{
+    return 0;
+}
+
+static void jailhouse_fixup_cpuops(void)
+{
+    unsigned int cpu;
+
+    pr_info("Installing Jailhouse PSCI functions\n");
+    
+    for_each_online_cpu(cpu) {
+	cpu_ops[cpu]->cpu_disable = jh_cpu_disable;
+	cpu_ops[cpu]->cpu_kill = jh_cpu_kill;
+	cpu_ops[cpu]->cpu_die = jh_cpu_off;	
+    }
+    return;
+}
+#endif /* CONFIG_REQUIRES_PSCI_EMULATION */
+
 static void copy_console_page(struct jailhouse_virt_console *dst)
 {
 	unsigned int tail;
@@ -596,6 +670,10 @@ static int jailhouse_cmd_enable(struct jailhouse_system __user *arg)
 
 	jailhouse_cell_register_root();
 	jailhouse_pci_virtual_root_devices_add(&config_header);
+
+#if defined(CONFIG_REQUIRES_PSCI_EMULATION)
+	jailhouse_fixup_cpuops();
+#endif	
 
 	jailhouse_enabled = true;
 
