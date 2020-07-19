@@ -24,5 +24,6 @@ enum dcache_flush {
 
 void arm_dcaches_flush(void *addr, long size, enum dcache_flush flush);
 void arm_cell_dcaches_flush(struct cell *cell, enum dcache_flush flush);
+void arm_l1l2_caches_flush(void);
 
 #endif /* !__ASSEMBLY__ */

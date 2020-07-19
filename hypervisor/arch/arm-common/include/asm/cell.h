@@ -22,10 +22,15 @@ struct arch_cell {
 
 	u32 irq_bitmap[1024/32];
 
-	struct {
-		u8 ent_count;
-		struct pvu_tlb_entry *entries;
-	} iommu_pvu; /**< ARM PVU specific fields. */
+	union {
+		struct {
+			u8 ent_count;
+			struct pvu_tlb_entry *entries;
+		} iommu_pvu; /**< ARM PVU specific fields. */
+
+		/* For SMMUv2 and SMMUv3 */
+		struct paging_structures iomm;
+	};
 };
 
 #endif /* !_JAILHOUSE_ASM_CELL_H */

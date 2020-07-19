@@ -257,13 +257,6 @@
 
 #define ARM_SMMU_SYNC_TIMEOUT		1000000
 
-#define FIELD_PREP(mask, val)	\
-			(((u64)(val) << (__builtin_ffsl((mask)) - 1)) & (mask))
-#define FIELD_GET(mask, reg)	\
-			(((reg) & (mask)) >> (__builtin_ffsl((mask)) - 1))
-#define FIELD_CLEAR(mask, reg)	\
-			((reg) & (~(mask)))
-
 #define CMDQ_OP_PREFETCH_CFG	0x1
 #define CMDQ_OP_PREFETCH_ADDR	0x2
 #define CMDQ_OP_CFGI_STE	0x3
@@ -353,7 +346,7 @@ struct arm_smmu_strtab_cfg {
 };
 
 /* An SMMUv3 instance */
-struct arm_smmu_device {
+static struct arm_smmu_device {
 	void				*base;
 	u32				features;
 	struct arm_smmu_cmdq		cmdq;
