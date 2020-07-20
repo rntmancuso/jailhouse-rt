@@ -100,6 +100,7 @@ struct jailhouse_cell_desc {
 	__u32 vpci_irq_base;
 
 	__u64 cpu_reset_address;
+    	__u32 num_memory_regions_colored;
 	__u64 msg_reply_timeout;
 
 	struct jailhouse_console console;
@@ -126,6 +127,11 @@ struct jailhouse_memory {
 	__u64 virt_start;
 	__u64 size;
 	__u64 flags;
+} __attribute__((packed));
+
+struct jailhouse_memory_colored {
+	struct jailhouse_memory memory;
+	__u64 colors;
 } __attribute__((packed));
 
 #define JAILHOUSE_SHMEM_NET_REGIONS(start, dev_id)			\
@@ -338,6 +344,7 @@ jailhouse_cell_config_size(struct jailhouse_cell_desc *cell)
 	return sizeof(struct jailhouse_cell_desc) +
 		cell->cpu_set_size +
 		cell->num_memory_regions * sizeof(struct jailhouse_memory) +
+		cell->num_memory_regions_colored * sizeof(struct jailhouse_memory_colored) +
 		cell->num_cache_regions * sizeof(struct jailhouse_cache) +
 		cell->num_irqchips * sizeof(struct jailhouse_irqchip) +
 		cell->num_pio_regions * sizeof(struct jailhouse_pio) +
@@ -367,12 +374,20 @@ jailhouse_cell_mem_regions(const struct jailhouse_cell_desc *cell)
 		((void *)jailhouse_cell_cpu_set(cell) + cell->cpu_set_size);
 }
 
+static inline const struct jailhouse_memory_colored *
+jailhouse_cell_col_mem_regions(const struct jailhouse_cell_desc *cell)
+{
+	return (const struct jailhouse_memory_colored *)
+		((void *)jailhouse_cell_mem_regions(cell) +
+		cell->num_memory_regions * sizeof(struct jailhouse_memory));
+}
+
 static inline const struct jailhouse_cache *
 jailhouse_cell_cache_regions(const struct jailhouse_cell_desc *cell)
 {
 	return (const struct jailhouse_cache *)
-		((void *)jailhouse_cell_mem_regions(cell) +
-		 cell->num_memory_regions * sizeof(struct jailhouse_memory));
+		((void *)jailhouse_cell_col_mem_regions(cell) +
+		 cell->num_memory_regions_colored * sizeof(struct jailhouse_memory_colored));
 }
 
 static inline const struct jailhouse_irqchip *

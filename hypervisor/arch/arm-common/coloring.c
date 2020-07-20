@@ -6,7 +6,7 @@
  *
  * Authors:
  *   Luca Miccio <lucmiccio@gmail.com>
- *
+ *   Renato Mancuso (BU) <rmancuso@bu.edu>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -16,13 +16,13 @@
 #include <jailhouse/coloring-common.h>
 
 int manage_colored_regions(const struct jailhouse_memory_colored col_mem,
-				struct cell *cell, col_manage_functions *functions,
-				col_operation type)
+			   struct cell *cell, col_manage_functions *functions,
+			   col_operation type)
 {
 	int MAX_COLORS;
 	int err = 0;
 	struct jailhouse_color_desc colors_desc = \
-						system_config->platform_info.coloring_desc;
+		system_config->platform_info.coloring_desc;
 	struct jailhouse_memory frag_mem_region;
 	__u64 f_size = colors_desc.fragment_unit_size;
 	__u64 f_offset = colors_desc.fragment_unit_offset;
@@ -35,7 +35,7 @@ int manage_colored_regions(const struct jailhouse_memory_colored col_mem,
 	unsigned long region_addr, region_size, size;
 	unsigned long vaddr = TEMPORARY_MAPPING_BASE +
 		this_cpu_id() * PAGE_SIZE * NUM_TEMPORARY_PAGES;
-    int i, r, k;
+	int i, r, k;
 
 	/* Get bit mask from color mask */
 	for (i = MAX_COLORS-1; i >= 0; --i, colors >>= 1)
@@ -46,25 +46,25 @@ int manage_colored_regions(const struct jailhouse_memory_colored col_mem,
 	ranges_in_mask(mask,MAX_COLORS,ranges);
 
 	for (r = 0; r < (int)(col_mem.memory.size/f_offset); r++) {
-	  for (k =0; k < MAX_COLORS*2; k+=2){
+		for (k =0; k < MAX_COLORS*2; k+=2){
 
-		/* Calculate mem region */
-		if(ranges[k] == -1)
-			continue;
+			/* Calculate mem region */
+			if(ranges[k] == -1)
+				continue;
 
-		int i = ranges[k];
-		int j = ranges[k+1];
+			int i = ranges[k];
+			int j = ranges[k+1];
 
-		frag_mem_region.size = (j - i + 1) * f_size;
-		frag_mem_region.phys_start = phys_start + (i * f_size) + (r * f_offset);
-		frag_mem_region.virt_start = virt_start;
-		frag_mem_region.flags = flags;
-		virt_start += frag_mem_region.size;
+			frag_mem_region.size = (j - i + 1) * f_size;
+			frag_mem_region.phys_start = phys_start + (i * f_size) + (r * f_offset);
+			frag_mem_region.virt_start = virt_start;
+			frag_mem_region.flags = flags;
+			virt_start += frag_mem_region.size;
 
-		switch (type) {
+			switch (type) {
 			case CREATE:
 				if (!(frag_mem_region.flags & (JAILHOUSE_MEM_COMM_REGION |
-						JAILHOUSE_MEM_ROOTSHARED))) {
+							       JAILHOUSE_MEM_ROOTSHARED))) {
 					err = functions->create_f.unmap_root_f(&frag_mem_region);
 					if (err)
 						return err;
@@ -77,7 +77,7 @@ int manage_colored_regions(const struct jailhouse_memory_colored col_mem,
 
 				if(err)
 					return err;
-			break;
+				break;
 
 			case DESTROY:
 				if (!JAILHOUSE_MEMORY_IS_SUBPAGE(&frag_mem_region)){
@@ -87,13 +87,13 @@ int manage_colored_regions(const struct jailhouse_memory_colored col_mem,
 				}
 
 				if (!(frag_mem_region.flags & (JAILHOUSE_MEM_COMM_REGION |
-						JAILHOUSE_MEM_ROOTSHARED))){
+							       JAILHOUSE_MEM_ROOTSHARED))){
 					err = functions->destroy_f.remap_root_f(&frag_mem_region,
-								WARN_ON_ERROR);
+										WARN_ON_ERROR);
 					if(err)
 						return err;
 				}
-			break;
+				break;
 
 			case START:
 				if (frag_mem_region.flags & JAILHOUSE_MEM_LOADABLE) {
@@ -101,7 +101,7 @@ int manage_colored_regions(const struct jailhouse_memory_colored col_mem,
 					if(err)
 						return err;
 				}
-			break;
+				break;
 
 			case LOADABLE:
 				if (frag_mem_region.flags & JAILHOUSE_MEM_LOADABLE) {
@@ -109,7 +109,7 @@ int manage_colored_regions(const struct jailhouse_memory_colored col_mem,
 					if(err)
 						return err;
 				}
-			break;
+				break;
 
 			case DCACHE:
 				region_addr = frag_mem_region.phys_start;
@@ -125,12 +125,12 @@ int manage_colored_regions(const struct jailhouse_memory_colored col_mem,
 						      PAGING_NON_COHERENT);
 
 					arm_dcaches_flush((void *)vaddr, size,
-										functions->flush);
+							  functions->flush);
 
 					region_addr += size;
 					region_size -= size;
 				}
-			break;
+				break;
 
 			default:
 				break;
