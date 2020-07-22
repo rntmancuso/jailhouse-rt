@@ -16,6 +16,7 @@
 #include <asm/sysregs.h>
 #include <asm/control.h>
 #include <asm/iommu.h>
+#include <asm/coloring.h>
 
 int arch_map_memory_region(struct cell *cell,
 			   const struct jailhouse_memory *mem)
@@ -104,6 +105,8 @@ void arm_cell_dcaches_flush(struct cell *cell, enum dcache_flush flush)
 		}
 	}
 
+	coloring_cell_flush(cell, flush);
+	
 	/* ensure completion of the flush */
 	dmb(ish);
 }

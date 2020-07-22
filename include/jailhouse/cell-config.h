@@ -122,6 +122,10 @@ struct jailhouse_cell_desc {
 #define JAILHOUSE_MEM_IO_32		(4 << JAILHOUSE_MEM_IO_WIDTH_SHIFT)
 #define JAILHOUSE_MEM_IO_64		(8 << JAILHOUSE_MEM_IO_WIDTH_SHIFT)
 
+/* This should be a physical address not uesed for any real peripheral
+ * or memory */
+#define ROOT_MAP_OFFSET             0x0C000000000UL
+
 struct jailhouse_memory {
 	__u64 phys_start;
 	__u64 virt_start;

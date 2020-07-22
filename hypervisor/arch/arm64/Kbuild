@@ -21,6 +21,6 @@ always := lib.a
 
 lib-y := $(common-objs-y)
 lib-y += entry.o setup.o control.o mmio.o paging.o caches.o traps.o
-lib-y += iommu.o smmu-v2.o smmu-v3.o ti-pvu.o
+lib-y += iommu.o smmu-v2.o smmu-v3.o ti-pvu.o coloring.o
 # lib-y += memguard.o
 # lib-y += qos.o

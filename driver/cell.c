@@ -80,17 +80,31 @@ retry:
 	cell->num_memory_regions = cell_desc->num_memory_regions;
 	cell->memory_regions = vmalloc(sizeof(struct jailhouse_memory) *
 				       cell->num_memory_regions);
-	if (!cell->memory_regions) {
+
+	/* Coloring support */
+	cell->num_memory_regions_colored = cell_desc->num_memory_regions_colored;
+	if(cell_desc->num_memory_regions_colored)
+		cell->memory_regions_colored = vmalloc(sizeof(struct jailhouse_memory_colored) *
+						cell->num_memory_regions_colored);
+
+	/* Coloring support */	
+	if (!cell->memory_regions && !cell->memory_regions_colored) {
 		kfree(cell);
 		return ERR_PTR(-ENOMEM);
 	}
 
 	memcpy(cell->name, cell_desc->name, JAILHOUSE_CELL_ID_NAMELEN);
 	cell->name[JAILHOUSE_CELL_ID_NAMELEN] = 0;
+	
+	if(cell_desc->num_memory_regions)
+		memcpy(cell->memory_regions, jailhouse_cell_mem_regions(cell_desc),
+		       sizeof(struct jailhouse_memory) * cell->num_memory_regions);
 
-	memcpy(cell->memory_regions, jailhouse_cell_mem_regions(cell_desc),
-	       sizeof(struct jailhouse_memory) * cell->num_memory_regions);
-
+	/* Coloring support */
+	if(cell_desc->num_memory_regions_colored)
+		memcpy(cell->memory_regions_colored, jailhouse_cell_col_mem_regions(cell_desc),
+		       sizeof(struct jailhouse_memory_colored) * cell->num_memory_regions_colored);
+	
 	err = jailhouse_pci_cell_setup(cell, cell_desc);
 	if (err) {
 		vfree(cell->memory_regions);
@@ -307,6 +321,7 @@ static int load_image(struct cell *cell,
 {
 	struct jailhouse_preload_image image;
 	const struct jailhouse_memory *mem;
+	const struct jailhouse_memory_colored *col_mem;
 	unsigned int regions, page_offs;
 	u64 image_offset, phys_start;
 	void *image_mem;
@@ -318,6 +333,7 @@ static int load_image(struct cell *cell,
 	if (image.size == 0)
 		return 0;
 
+	/* search non-colored regions first */
 	mem = cell->memory_regions;
 	for (regions = cell->num_memory_regions; regions > 0; regions--) {
 		image_offset = image.target_address - mem->virt_start;
@@ -330,19 +346,54 @@ static int load_image(struct cell *cell,
 		}
 		mem++;
 	}
+
+	if (regions > 0) {
+		phys_start = (mem->phys_start + image_offset) & PAGE_MASK;
+		page_offs = offset_in_page(image_offset);
+		image_mem = jailhouse_ioremap(phys_start, 0,
+					      PAGE_ALIGN(image.size + page_offs));
+
+		if (!image_mem) {
+			pr_err("jailhouse: Unable to map cell RAM at %08llx "
+			       "for image loading\n",
+			       (unsigned long long)(mem->phys_start + image_offset));
+			return -EBUSY;
+		}
+
+	} else {
+		/* search colored regions next */	
+		col_mem = cell->memory_regions_colored;
+		/* Coloring support */
+		for (regions = cell->num_memory_regions_colored; regions > 0; regions--) {
+			image_offset = image.target_address - col_mem->memory.virt_start;
+			if (image.target_address >= col_mem->memory.virt_start &&
+			    image_offset < col_mem->memory.size) {
+				if (image.size > col_mem->memory.size - image_offset ||
+				    (col_mem->memory.flags & MEM_REQ_FLAGS) != MEM_REQ_FLAGS)
+					return -EINVAL;
+				break;
+			}
+			col_mem++;
+		}
+
+		if (regions > 0) {
+			phys_start = (ROOT_MAP_OFFSET + image_offset) & PAGE_MASK;
+			page_offs = offset_in_page(image_offset);
+			image_mem = jailhouse_ioremap(phys_start, 0,
+					      PAGE_ALIGN(image.size + page_offs));
+
+			if (!image_mem) {
+				pr_err("jailhouse: Unable to map cell RAM at %08llx "
+				       "for image loading\n",
+				       (unsigned long long)(phys_start + image_offset));
+				return -EBUSY;
+			}
+
+		}
+	}
+
 	if (regions == 0)
 		return -EINVAL;
-
-	phys_start = (mem->phys_start + image_offset) & PAGE_MASK;
-	page_offs = offset_in_page(image_offset);
-	image_mem = jailhouse_ioremap(phys_start, 0,
-				      PAGE_ALIGN(image.size + page_offs));
-	if (!image_mem) {
-		pr_err("jailhouse: Unable to map cell RAM at %08llx "
-		       "for image loading\n",
-		       (unsigned long long)(mem->phys_start + image_offset));
-		return -EBUSY;
-	}
 
 	if (copy_from_user(image_mem + page_offs,
 			   (void __user *)(unsigned long)image.source_address,

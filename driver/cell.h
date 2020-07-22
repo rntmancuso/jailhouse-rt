@@ -32,6 +32,8 @@ struct cell {
 	cpumask_t cpus_assigned;
 	u32 num_memory_regions;
 	struct jailhouse_memory *memory_regions;
+    	u32 num_memory_regions_colored;
+	struct jailhouse_memory_colored *memory_regions_colored;
 #ifdef CONFIG_PCI
 	u32 num_pci_devices;
 	struct jailhouse_pci_device *pci_devices;

@@ -21,9 +21,10 @@
 #include <jailhouse/utils.h>
 #include <asm/control.h>
 #include <asm/spinlock.h>
+#include <asm/coloring.h>
+
 
 enum msg_type {MSG_REQUEST, MSG_INFORMATION};
-enum failure_mode {ABORT_ON_ERROR, WARN_ON_ERROR};
 enum management_task {CELL_START, CELL_SET_LOADABLE, CELL_DESTROY};
 
 /** System configuration as used while activating the hypervisor. */
@@ -299,7 +300,7 @@ static bool address_in_region(unsigned long addr,
 	       addr < (region->phys_start + region->size);
 }
 
-static int unmap_from_root_cell(const struct jailhouse_memory *mem)
+int unmap_from_root_cell(const struct jailhouse_memory *mem)
 {
 	/*
 	 * arch_unmap_memory_region and mmio_subpage_unregister use the
@@ -318,7 +319,7 @@ static int unmap_from_root_cell(const struct jailhouse_memory *mem)
 	return arch_unmap_memory_region(&root_cell, &tmp);
 }
 
-static int remap_to_root_cell(const struct jailhouse_memory *mem,
+int remap_to_root_cell(const struct jailhouse_memory *mem,
 			      enum failure_mode mode)
 {
 	const struct jailhouse_memory *root_mem;
@@ -637,11 +638,15 @@ static int cell_start(struct per_cpu *cpu_data, unsigned long id)
 					goto out_resume;
 			}
 
+		err = coloring_cell_start(cell);
+		if (err)
+			goto out_resume;
+		
 		config_commit(NULL);
 
 		cell->loadable = false;
 	}
-
+	
 	/*
 	 * Present a consistent Communication Region state to the cell. Zero the
 	 * whole region as it might be dirty. This implies:
@@ -714,6 +719,10 @@ static int cell_set_loadable(struct per_cpu *cpu_data, unsigned long id)
 			if (err)
 				goto out_resume;
 		}
+
+	err = coloring_cell_load(cell);
+	if (err)
+		goto out_resume;	
 
 	config_commit(NULL);
 

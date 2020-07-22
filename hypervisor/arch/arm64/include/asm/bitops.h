@@ -11,6 +11,9 @@
  * the COPYING file in the top-level directory.
  */
 
+#ifndef _JAILHOUSE_ARCH_BITOPS_H
+#define _JAILHOUSE_ARCH_BITOPS_H
+
 /* also include from arm-common */
 #include_next <asm/bitops.h>
 
@@ -43,3 +46,5 @@ static inline int atomic_test_and_set_bit(int nr, volatile unsigned long *addr)
 	} while (ret);
 	return !!(test);
 }
+
+#endif /* _JAILHOUSE_ARCH_BITOPS_H  */

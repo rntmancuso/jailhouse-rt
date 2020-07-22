@@ -33,6 +33,8 @@ extern unsigned long panic_cpu;
 
 extern struct jailhouse_system *system_config;
 
+enum failure_mode {ABORT_ON_ERROR, WARN_ON_ERROR};
+
 unsigned int next_cpu(unsigned int cpu, struct cpu_set *cpu_set,
 		      int exception);
 
@@ -129,6 +131,23 @@ void shutdown(void);
 
 void __attribute__((noreturn)) panic_stop(void);
 void panic_park(void);
+
+/**
+ * Performs the architecture-independent steps to unmap a memory
+ * region from the root-cell.
+ *
+ * @see remap_to_root_cell
+ */
+int unmap_from_root_cell(const struct jailhouse_memory *mem);
+
+/**
+ * Performs the architecture-independent steps to remap a memory
+ * region to the root-cell.
+ *
+ * @see remap_to_root_cell
+ */
+int remap_to_root_cell(const struct jailhouse_memory *mem,
+		       enum failure_mode mode);
 
 /**
  * Resume a suspended remote CPU.
@@ -287,5 +306,6 @@ void __attribute__((noreturn)) arch_panic_stop(void);
  * @see panic_park
  */
 void arch_panic_park(void);
+
 
 /** @} */
