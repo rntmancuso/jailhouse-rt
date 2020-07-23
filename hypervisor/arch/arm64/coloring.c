@@ -74,9 +74,11 @@ static struct cache {
 /* This is a global struct initialized at setup time */
 struct col_manage_ops col_ops = {
 	.map_f = arch_map_memory_region,
+	.smmu_map_f = NULL, /* Will be initialized by the SMMU support */
 	.subpage_f = mmio_subpage_register,
 	.unmap_root_f = unmap_from_root_cell,
 	.unmap_f = arch_unmap_memory_region,
+	.smmu_unmap_f = NULL, /* Will be initialized by the SMMU support */
 	.remap_root_f = remap_to_root_cell,
 };
 
@@ -155,6 +157,54 @@ static int coloring_cache_detect(void)
 	return (cache.level == -1);
 }
 
+/** 
+ *   Perform a copy of memory from a non-colored space to a colored
+ *   space. The two spaces could be overlapping in physical memory, so
+ *   go in reverse. Also map the contiguous space a bit at a time to
+ *   take it easy on the pool pages.
+ */
+static void colored_copy(const struct jailhouse_memory_colored * col_mem)
+{
+	unsigned long phys_addr, tot_size, size;
+	int i;
+	
+	tot_size = col_mem->memory.size;
+
+	/* Find the first page that does not belong to the non-colored
+	 * mapping */
+	phys_addr = col_mem->memory.phys_start + tot_size;
+	
+	while (tot_size > 0) {
+		size = MIN(tot_size,
+			   NUM_TEMPORARY_PAGES * PAGE_SIZE);
+		
+		phys_addr -= size;
+		/* If we have reached the beginning (end of copy),
+		 * make sure we do not exceed the boundary of the
+		 * region */
+		if (phys_addr < col_mem->memory.phys_start)
+			phys_addr = col_mem->memory.phys_start;
+		
+		/* cannot fail, mapping area is preallocated */
+		paging_create(&this_cpu_data()->pg_structs, phys_addr,
+			      size, TEMPORARY_MAPPING_BASE,
+			      PAGE_DEFAULT_FLAGS,
+			      PAGING_NON_COHERENT | PAGING_NO_HUGE);
+
+		/* Actual data copy operation */
+		for (i = (size >> PAGE_SHIFT) - 1; i >= 0; --i) {
+			/* Destination: colored mapping created via HV_CREATE */
+			/* Source: non-colored mapping defined above */
+			memcpy((void *)ROOT_MAP_OFFSET + phys_addr + (i << PAGE_SHIFT),
+			       (void *)TEMPORARY_MAPPING_BASE + (i << PAGE_SHIFT),
+			       PAGE_SIZE);
+		}
+		
+		tot_size -= size;
+	}
+	
+}
+
 /**
  * Find all the ranges (i,j) s.t (i<=k<=j and mask[k]=1) in mask
  */
@@ -183,7 +233,7 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 				    struct cell *cell, col_operation type, void * extra)
 {
 	int MAX_COLORS;
-	int err = 0;
+	int err = -EINVAL;
 	struct jailhouse_memory frag_mem_region;
 	__u64 f_size = cache.fragment_unit_size;
 	__u64 f_offset = cache.fragment_unit_offset;
@@ -238,6 +288,35 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 					return err;
 				break;
 
+			case HV_CREATE:
+
+				/* Map colored region that is linearly
+				 * mapped from the HV's point of
+				 * view. It will be used to copy the
+				 * content of the physical memory of
+				 * the root cell. */
+				err = paging_create(&this_cpu_data()->pg_structs,
+						    frag_mem_region.phys_start,
+						    frag_mem_region.size,
+						    frag_mem_region.virt_start + ROOT_MAP_OFFSET,
+						    PAGE_DEFAULT_FLAGS, PAGING_NON_COHERENT);
+				
+				if(err)
+					return err;
+				break;
+				
+			case SMMU_CREATE:
+
+				/* Throw an error if no SMMU mapping function was installed */
+				if (!col_ops.smmu_map_f) 
+					return -ENOSYS;
+				
+				err = col_ops.smmu_map_f(cell, &frag_mem_region);
+				
+				if(err)
+					return err;
+				break;
+				
 			case DESTROY:
 				if (!JAILHOUSE_MEMORY_IS_SUBPAGE(&frag_mem_region)){
 					err = col_ops.unmap_f(cell, &frag_mem_region);
@@ -254,6 +333,27 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 				}
 				break;
 
+			case HV_DESTROY:
+				
+				err = paging_destroy(&this_cpu_data()->pg_structs,
+						     frag_mem_region.virt_start + ROOT_MAP_OFFSET,
+						     frag_mem_region.size,
+						     PAGING_NON_COHERENT);
+				
+				if(err)
+					return err;
+
+				break;
+
+			case SMMU_DESTROY:
+				/* Throw an error if no SMMU mapping function was installed */
+				if (!col_ops.smmu_unmap_f)
+					return -ENOSYS;
+
+				/* TODO: implement this */
+				
+				break;
+				
 			case START:
 				if (frag_mem_region.flags & JAILHOUSE_MEM_LOADABLE) {
 					
@@ -262,12 +362,7 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 					 * useful memory */
 					frag_mem_region.virt_start += ROOT_MAP_OFFSET;
 					
-					err = arch_unmap_memory_region(&root_cell, &frag_mem_region);
-
-					/*
-					 * err = col_ops.unmap_root_f(&frag_mem_region);
-					 */
-					
+					err = arch_unmap_memory_region(&root_cell, &frag_mem_region);					
 					if(err)
 						return err;
 				}
@@ -284,10 +379,6 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 					/* Create an ad-hoc mapping just to load this image */
 					err = arch_map_memory_region(&root_cell, &frag_mem_region);
 					
-					/*
-					 * err = col_ops.remap_root_f(&frag_mem_region,
-					 * 			   ABORT_ON_ERROR);
-					 */
 					if(err)
 						return err;
 				}
@@ -386,24 +477,47 @@ static int coloring_cell_init(struct cell *cell)
 	int err, n;
 	const struct jailhouse_memory_colored *col_mem;
 
-	err = coloring_cell_create(cell);
-
-	if (err)
-		return err;
-
 	/* If this was the root-cell, then we need to perform coloring
 	 * of the memory already loaded for Linux. Just to be safe,
 	 * expand any colored memory area. */
 	if (cell == &root_cell) {
 		for_each_col_mem_region(col_mem, cell->config, n) {
-			/* TODO expand colored memory regions */
+			/* Expand colored memory regions */
 			/* NOTE: we better have a working
 			 * coloring-aware SMMU here. */
+			err = __manage_colored_region(*col_mem, cell, HV_CREATE, NULL);
 			
-			if(err)
-				return err;
+			if(err) {
+				col_print("ERROR: HV_CREATE returned %d\n", err);
+ 				return err;
+			}
+
+			/* Ready to map a contiguous view of the
+			 * memory that needs to be copy-colored, but
+			 * do this in little steps because the colored
+			 * mapping likely used quite a bit of pool
+			 * pages. */
+			col_print("\tPerfoming dynamic recoloring of root-cell...\n");
+			colored_copy(col_mem);
+			col_print("\tDone!\n");
+			
+			/* Alroght. We can now release all the temporary mappings */
+			err = __manage_colored_region(*col_mem, cell, HV_DESTROY, NULL);
+
+			if(err) {
+				col_print("ERROR: HV_DESTROY returned %d\n", err);
+ 				return err;
+			}
 		}
 	}	
+
+	/* Do this after the colored-copy, to reduce the likelihood
+	 * that it will fail due to a lack of pool pages needed to
+	 * maintain the colored mapping. */
+	err = coloring_cell_create(cell);
+
+	if (err)
+		return err;
 	
 	return 0;
 }

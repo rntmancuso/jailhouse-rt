@@ -20,7 +20,9 @@
 #ifndef _JAILHOUSE_COLORING_H
 #define _JAILHOUSE_COLORING_H
 
-typedef enum {CREATE, DESTROY, START, LOAD, DCACHE} col_operation;
+typedef enum {CREATE, DESTROY, START, LOAD, DCACHE,
+	      SMMU_CREATE, SMMU_DESTROY,
+	      HV_CREATE, HV_DESTROY} col_operation;
 
 extern struct jailhouse_system *system_config;
 
@@ -38,18 +40,22 @@ extern struct jailhouse_system *system_config;
 	     (mem)++, (counter)++)
 
 struct col_manage_ops {
-  int (*map_f)(struct cell *cell, const struct jailhouse_memory *mem);
-  int (*subpage_f)(struct cell *cell,
-                 const struct jailhouse_memory *mem);
-  int (*unmap_f)(struct cell *cell,
-                 const struct jailhouse_memory *mem);
-  /* unmap_from_root_cell if cell is starting and mem is loadable*/
-  int (*unmap_root_f)(const struct jailhouse_memory* mem);
-  /* remap_to_root_cell if the cell is loadable to permit the root cell to
-   * load the image */
-  int (*remap_root_f)(const struct jailhouse_memory* mem, enum failure_mode mode);
-  /* Flush operation used during D-Cache operation */
-  enum dcache_flush flush;	
+	int (*map_f)(struct cell *cell, const struct jailhouse_memory *mem);
+	/* Map a memory region in the SMMU tables of the cell */
+	int (*smmu_map_f)(struct cell *cell, const struct jailhouse_memory *mem);
+	
+	int (*subpage_f)(struct cell *cell, const struct jailhouse_memory *mem);
+	int (*unmap_f)(struct cell *cell, const struct jailhouse_memory *mem);
+	/* Unmap a memory region from the SMMU tables of the cell */
+	int (*smmu_unmap_f)(struct cell *cell, const struct jailhouse_memory *mem);
+
+	/* unmap_from_root_cell if cell is starting and mem is loadable*/
+	int (*unmap_root_f)(const struct jailhouse_memory* mem);
+	/* remap_to_root_cell if the cell is loadable to permit the root cell to
+	 * load the image */
+	int (*remap_root_f)(const struct jailhouse_memory* mem, enum failure_mode mode);
+	/* Flush operation used during D-Cache operation */
+	enum dcache_flush flush;	
 };
 
 extern struct col_manage_ops col_ops;
@@ -63,8 +69,14 @@ int __coloring_cell_apply_to_col_mem(struct cell *cell, col_operation type, void
 #define coloring_cell_create(cell)	\
     __coloring_cell_apply_to_col_mem(cell, CREATE, NULL)
 
+#define coloring_cell_smmu_create(cell)	\
+    __coloring_cell_apply_to_col_mem(cell, SMMU_CREATE, NULL)
+
 #define coloring_cell_destroy(cell)	\
     __coloring_cell_apply_to_col_mem(cell, DESTROY, NULL)
+
+#define coloring_cell_smmu_destroy(cell)	\
+    __coloring_cell_apply_to_col_mem(cell, SMMU_DESTROY, NULL)
 
 #define coloring_cell_start(cell)	\
     __coloring_cell_apply_to_col_mem(cell, START, NULL)
@@ -74,5 +86,6 @@ int __coloring_cell_apply_to_col_mem(struct cell *cell, col_operation type, void
 
 #define coloring_cell_flush(cell, flush_type)		\
     __coloring_cell_apply_to_col_mem(cell, DCACHE, (void *)flush_type)
+
 
 #endif /* _JAILHOUSE_COLORING_H */

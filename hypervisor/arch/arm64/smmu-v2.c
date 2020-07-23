@@ -28,6 +28,7 @@
 #include <asm/iommu.h>
 #include <jailhouse/cell.h>
 #include <jailhouse/mmio.h>
+#include <asm/coloring.h>
 
 #define smmu_print printk
 #define SMMUV2_DEBUG 1
@@ -994,7 +995,22 @@ static int arm_smmuv2_cell_init(struct cell *cell)
 			}
 		}
 
+		/* There is at least one SMMUv2 in the system. Assume
+		 * that this is THE main SMMU and populate coloring
+		 * functions with the smmu-dependent memory mapping
+		 * function. */
+		if (!col_ops.smmu_map_f)
+			col_ops.smmu_map_f = arm_smmu_map_memory_region;
 		
+		/* TODO populate unmap function too */
+
+		/* Invoke creation of colored regions in the SMMU mapping */
+		ret = coloring_cell_smmu_create(cell);
+		if (ret) {
+			smmu_print("ERROR: colored region mapping failed with code %d.\n", ret);
+			return -EINVAL;			
+		}
+				
 		/* Find an unused stream matching context number */
 		for (cbndx = 0; cbndx < smmu->num_context_banks; ++cbndx) {
 			if (smmu[i].cell_to_cb[cbndx] == -1)
