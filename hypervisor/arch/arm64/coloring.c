@@ -205,6 +205,42 @@ static void colored_copy(const struct jailhouse_memory_colored * col_mem)
 	
 }
 
+static void colored_uncopy(const struct jailhouse_memory_colored * col_mem)
+{
+	unsigned long phys_addr, tot_size, size;
+	int i;
+	
+	tot_size = col_mem->memory.size;
+
+	/* Find the first page in the non-colored mapping */
+	phys_addr = col_mem->memory.phys_start;
+	
+	while (tot_size > 0) {
+		size = MIN(tot_size,
+			   NUM_TEMPORARY_PAGES * PAGE_SIZE);
+		
+		/* cannot fail, mapping area is preallocated */
+		paging_create(&this_cpu_data()->pg_structs, phys_addr,
+			      size, TEMPORARY_MAPPING_BASE,
+			      PAGE_DEFAULT_FLAGS,
+			      PAGING_NON_COHERENT | PAGING_NO_HUGE);
+
+		/* Actual data copy operation */
+		for (i = 0; i < (size >> PAGE_SHIFT); ++i) {
+			/* Destination: colored mapping created via HV_CREATE */
+			/* Source: non-colored mapping defined above */
+			memcpy((void *)TEMPORARY_MAPPING_BASE + (i << PAGE_SHIFT),
+			       (void *)ROOT_MAP_OFFSET + phys_addr + (i << PAGE_SHIFT),
+			       PAGE_SIZE);
+		}
+
+		phys_addr += size;
+		tot_size -= size;
+	}
+	
+}
+
+
 /**
  * Find all the ranges (i,j) s.t (i<=k<=j and mask[k]=1) in mask
  */
@@ -237,7 +273,7 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 	struct jailhouse_memory frag_mem_region;
 	__u64 f_size = cache.fragment_unit_size;
 	__u64 f_offset = cache.fragment_unit_offset;
-	__u64 colors = (1 << cache.colors) - 1;
+	__u64 colors = col_mem.colors;
 	__u64 phys_start = col_mem.memory.phys_start;
 	__u64 virt_start = col_mem.memory.virt_start;
 	__u64 flags = col_mem.memory.flags;
@@ -254,9 +290,12 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 	int ranges[MAX_COLORS*2];
 	ranges_in_mask(mask,MAX_COLORS,ranges);
 
-	for (r = 0; r < (int)(col_mem.memory.size/f_offset); r++) {
-		for (k =0; k < MAX_COLORS*2; k+=2){
-
+	
+	r = 0;
+	/* for (r = 0; r < (int)(col_mem.memory.size/f_offset); r++) */
+	while (virt_start < col_mem.memory.virt_start + col_mem.memory.size) {
+		for (k =0; k < MAX_COLORS*2; k+=2) {
+			
 			/* Calculate mem region */
 			if(ranges[k] == -1)
 				continue;
@@ -270,6 +309,12 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 			frag_mem_region.flags = flags;
 			virt_start += frag_mem_region.size;
 
+#if 0
+			col_print("V: 0x%08llx -> P: 0x%08llx (size = 0x%08llx)\n",
+				  frag_mem_region.virt_start, frag_mem_region.phys_start,
+				  frag_mem_region.size);
+#endif
+			
 			switch (type) {
 			case CREATE:
 				if (!(frag_mem_region.flags & (JAILHOUSE_MEM_COMM_REGION |
@@ -388,6 +433,8 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 				region_addr = frag_mem_region.phys_start;
 				region_size = frag_mem_region.size;
 
+				err = 0;
+				
 				while (region_size > 0) {
 					size = MIN(region_size,
 						   NUM_TEMPORARY_PAGES * PAGE_SIZE);
@@ -410,6 +457,8 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 				break;
 			}
 		}
+
+		++r;
 	}
 
 	return err;
@@ -447,9 +496,11 @@ int __coloring_cell_apply_to_col_mem(struct cell *cell, col_operation type, void
 
 static void coloring_cell_exit(struct cell *cell)
 {
-	int n;
+	int n, err;
 	const struct jailhouse_memory_colored *col_mem;
 
+	/* Free up this mapping first, to take it easy on pool
+	 * pages */
 	coloring_cell_destroy(cell);
 
 	/* If this was the root-cell, then we need to un-do coloring
@@ -457,9 +508,31 @@ static void coloring_cell_exit(struct cell *cell)
 	 * un-do coloring for any colored memory area. */
 	if (cell == &root_cell) {
 		for_each_col_mem_region(col_mem, cell->config, n) {
-			/* TODO compress colored memory regions */
-			/* NOTE: we better have a working
-			 * coloring-aware SMMU here. */
+			/* Create a linear mapping of the colored
+			 * region for the hypervisor */
+			err = __manage_colored_region(*col_mem, cell, HV_CREATE, NULL);
+			
+			if(err) {
+				col_print("ERROR: HV_CREATE returned %d\n", err);
+ 				return;
+			}
+
+			/* Ready to map a contiguous view of the
+			 * memory that needs to be copy-colored, but
+			 * do this in little steps because the colored
+			 * mapping likely used quite a bit of pool
+			 * pages. */
+			col_print("\tPerfoming color rewinding of root-cell...\n");
+			colored_uncopy(col_mem);
+			col_print("\tDone!\n");
+			
+			/* Alroght. We can now release all the temporary mappings */
+			err = __manage_colored_region(*col_mem, cell, HV_DESTROY, NULL);
+
+			if(err) {
+				col_print("ERROR: HV_DESTROY returned %d\n", err);
+ 				return;
+			}
 			
 		}
 	}	
@@ -501,7 +574,7 @@ static int coloring_cell_init(struct cell *cell)
 			colored_copy(col_mem);
 			col_print("\tDone!\n");
 			
-			/* Alroght. We can now release all the temporary mappings */
+			/* Alright. We can now release all the temporary mappings */
 			err = __manage_colored_region(*col_mem, cell, HV_DESTROY, NULL);
 
 			if(err) {
