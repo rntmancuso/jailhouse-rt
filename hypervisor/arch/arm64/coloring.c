@@ -237,7 +237,7 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 	struct jailhouse_memory frag_mem_region;
 	__u64 f_size = cache.fragment_unit_size;
 	__u64 f_offset = cache.fragment_unit_offset;
-	__u64 colors = (1 << cache.colors) - 1;
+	__u64 colors = col_mem.colors;
 	__u64 phys_start = col_mem.memory.phys_start;
 	__u64 virt_start = col_mem.memory.virt_start;
 	__u64 flags = col_mem.memory.flags;
@@ -254,9 +254,12 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 	int ranges[MAX_COLORS*2];
 	ranges_in_mask(mask,MAX_COLORS,ranges);
 
-	for (r = 0; r < (int)(col_mem.memory.size/f_offset); r++) {
-		for (k =0; k < MAX_COLORS*2; k+=2){
-
+	
+	r = 0;
+	/* for (r = 0; r < (int)(col_mem.memory.size/f_offset); r++) */
+	while (virt_start < col_mem.memory.virt_start + col_mem.memory.size) {
+		for (k =0; k < MAX_COLORS*2; k+=2) {
+			
 			/* Calculate mem region */
 			if(ranges[k] == -1)
 				continue;
@@ -270,6 +273,12 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 			frag_mem_region.flags = flags;
 			virt_start += frag_mem_region.size;
 
+#if 0
+			col_print("V: 0x%08llx -> P: 0x%08llx (size = 0x%08llx)\n",
+				  frag_mem_region.virt_start, frag_mem_region.phys_start,
+				  frag_mem_region.size);
+#endif
+			
 			switch (type) {
 			case CREATE:
 				if (!(frag_mem_region.flags & (JAILHOUSE_MEM_COMM_REGION |
@@ -388,6 +397,8 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 				region_addr = frag_mem_region.phys_start;
 				region_size = frag_mem_region.size;
 
+				err = 0;
+				
 				while (region_size > 0) {
 					size = MIN(region_size,
 						   NUM_TEMPORARY_PAGES * PAGE_SIZE);
@@ -410,6 +421,8 @@ static int __manage_colored_region(const struct jailhouse_memory_colored col_mem
 				break;
 			}
 		}
+
+		++r;
 	}
 
 	return err;
