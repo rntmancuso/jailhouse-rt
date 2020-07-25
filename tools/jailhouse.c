@@ -487,6 +487,42 @@ static int cell_simple_cmd(int argc, char *argv[], unsigned int command)
 	return err;
 }
 
+static int cell_memguard_cmd(int argc, char *argv[], unsigned int command)
+{
+	struct jailhouse_cell_id cell_id;
+	struct jailhouse_memguard_args * mg_args;
+	int id_args, err, fd;
+
+	id_args = parse_cell_id(&cell_id, argc - 3, &argv[3]);
+	if (id_args == 0 || 5 + id_args != argc)
+		help(argv[0], 1);
+
+	mg_args = (struct jailhouse_memguard_args *)malloc(sizeof(struct jailhouse_memguard_args));
+	if (!mg_args) {
+		fprintf(stderr, "insufficient memory\n");
+		exit(1);
+	}
+	mg_args->cell_id = cell_id;
+	mg_args->budget_time = strtoul(argv[4], NULL, 0);
+	mg_args->budget_memory = strtoul(argv[5], NULL, 0);
+
+	if (mg_args->budget_time == 0 && mg_args->budget_memory == 0)
+	    mg_args->flags = 0;
+	else
+	    mg_args->flags = 1; //MGF_PERIODIC;
+	
+	fd = open_dev();
+
+	err = ioctl(fd, command, mg_args);
+	if (err)
+		perror("JAILHOUSE_CELL_MEMGUARD");
+
+	close(fd);
+
+	return err;
+}
+
+
 static int cell_management(int argc, char *argv[])
 {
 	int err;
@@ -506,6 +542,8 @@ static int cell_management(int argc, char *argv[])
 		err = cell_shutdown_load(argc, argv, SHUTDOWN);
 	} else if (strcmp(argv[2], "destroy") == 0) {
 		err = cell_simple_cmd(argc, argv, JAILHOUSE_CELL_DESTROY);
+	} else if (strcmp(argv[2], "memguard") == 0) {
+	    err = cell_memguard_cmd(argc, argv, JAILHOUSE_CELL_MEMGUARD);
 	} else {
 		call_extension_script("cell", argc, argv);
 		help(argv[0], 1);
