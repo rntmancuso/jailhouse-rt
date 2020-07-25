@@ -22,7 +22,8 @@
 #include <asm/control.h>
 #include <asm/spinlock.h>
 #include <asm/coloring.h>
-
+#include <asm/memguard.h>
+#include <asm/qos.h>
 
 enum msg_type {MSG_REQUEST, MSG_INFORMATION};
 enum management_task {CELL_START, CELL_SET_LOADABLE, CELL_DESTROY};
@@ -974,6 +975,12 @@ long hypercall(unsigned long code, unsigned long arg1, unsigned long arg2)
 			return trace_error(-EPERM);
 		printk("%c", (char)arg1);
 		return 0;
+	case JAILHOUSE_HC_MEMGUARD:
+		return memguard_call_params(arg1);
+	/*
+	 * case JAILHOUSE_HC_QOS:
+	 * 	return qos_call(arg1, arg2);		
+	 */
 	default:
 		return -ENOSYS;
 	}

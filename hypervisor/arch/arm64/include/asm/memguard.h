@@ -22,8 +22,8 @@
 void memguard_init(u8 local_irq_target);
 void memguard_suspend(void);
 void memguard_exit(void);
-bool memguard_handle_interrupt(struct per_cpu *cpu_data, u32 irqn);
-void memguard_block_if_needed(struct per_cpu *cpu_data);
+bool memguard_handle_interrupt(u32 irqn);
+void memguard_block_if_needed(void);
 
 /* Memguard flags */
 #define MGF_PERIODIC      (1 << 0) /* Chooses between periodic or one-shot budget replenishment */
@@ -40,6 +40,12 @@ void memguard_block_if_needed(struct per_cpu *cpu_data);
 #define MGRET_OVER_MEM_MASK	(1ul << MGRET_OVER_MEM_POS)
 #define MGRET_OVER_TIM_MASK	(1ul << MGRET_OVER_TIM_POS)
 #define MGRET_ERROR_MASK	(1ul << MGRET_ERROR_POS)
+
+struct memguard_params {
+	unsigned long budget_time;
+	unsigned long budget_memory;
+	unsigned long flags;
+};
 
 /**
  * Main MemGuard interface for applications.
@@ -92,5 +98,7 @@ void memguard_block_if_needed(struct per_cpu *cpu_data);
  */
 long memguard_call(unsigned long budget_time, unsigned long budget_memory,
 		   unsigned long flags);
+
+long memguard_call_params(unsigned long params_ptr);
 
 #endif

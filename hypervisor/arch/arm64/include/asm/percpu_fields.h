@@ -10,6 +10,9 @@
  * the COPYING file in the top-level directory.
  */
 
+#include <asm/memguard-data.h>
+
 #define ARCH_PERCPU_FIELDS						\
 	ARM_PERCPU_FIELDS						\
-	unsigned long id_aa64mmfr0;
+	unsigned long id_aa64mmfr0;					\
+	struct memguard memguard;

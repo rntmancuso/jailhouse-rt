@@ -22,6 +22,7 @@
 #include <asm/control.h>
 #include <asm/gic.h>
 #include <asm/irqchip.h>
+#include <asm/memguard.h>
 #include <asm/sysregs.h>
 
 #define for_each_irqchip(chip, config, counter)				\
@@ -204,6 +205,10 @@ void irqchip_handle_irq(void)
 		 * interrupt that needs handling in the guest (e.g. timer)
 		 */
 		irqchip.eoi_irq(irq_id, handled);
+
+		/* Make sure we have handled ANY pending interrupt before
+		 * blocking for MG */
+		memguard_block_if_needed();
 	}
 }
 

@@ -24,7 +24,7 @@
 
 #define MG_DEBUG 0
 
-#if defined (CONFIG_MACH_JETSON_TX2)
+#if CONFIG_MACH_JETSON_TX2 == 1
 /* NVIDIA TX2 Specific Support */
 
 /* Found out by using Linux perf tool and watching /proc/interrupts
@@ -60,7 +60,7 @@ static const int mach_cpu_id2irqn[6] = {
 #define IRQ_PRIORITY_THR		0x10
 
 
-#elif defined (CONFIG_MACH_NXP_S32)
+#elif CONFIG_MACH_NXP_S32 == 1
 /* NXP S32 Specific Support */
 
 /* For this SoC we have:
@@ -81,6 +81,32 @@ static const int mach_cpu_id2irqn[4] = {
 };
 
 /* On s32, all 256 priority levels are implemented */
+#define IRQ_PRIORITY_MIN		0xFF
+#define IRQ_PRIORITY_MAX		0x00
+#define IRQ_PRIORITY_INC		0x01
+
+#define IRQ_PRIORITY_THR		0x10
+
+#elif CONFIG_MACH_ZYNQMP_ZCU102 == 1
+/* ZCU 102 Specific Support */
+
+/* For this SoC we have:
+ - 32 SGIs and PPIs
+ - 8 SPIs
+ - 148 system interrupts
+ ------ Total = 188
+*/
+#define CCPLEX_IRQ_SIZE			188
+#define MEMGUARD_TIMER_IRQ		26 /* Non-secure physical timer */
+
+static const int mach_cpu_id2irqn[4] = {
+    175,
+    176,
+    177,
+    178
+};
+
+/* On ZCU102, all 256 priority levels are implemented */
 #define IRQ_PRIORITY_MIN		0xFF
 #define IRQ_PRIORITY_MAX		0x00
 #define IRQ_PRIORITY_INC		0x01
@@ -337,7 +363,7 @@ static inline void memguard_pmu_set_budget(u32 budget)
 		);
 }
 
-static void memguard_pmu_isr(volatile struct memguard *memguard, struct per_cpu * cpu_data)
+static void memguard_pmu_isr(volatile struct memguard *memguard)
 {
 #if MG_DEBUG == 1	
 	u32 cntval = memguard_pmu_count();
@@ -352,16 +378,16 @@ static void memguard_pmu_isr(volatile struct memguard *memguard, struct per_cpu 
 #if MG_DEBUG == 1	
 	if (print_cnt < 100)
 		printk("[%d] _isr_pmu: p: %u t: %llu (CPU %d)\n",
-		       ++print_cnt, cntval, timval, cpu_data->cpu_id);
+		       ++print_cnt, cntval, timval, this_cpu_id());
 #endif
 	memguard->memory_overrun = true;
 	if (memguard->flags & MGF_PERIODIC)
 		memguard->block = 1; /* Block after EOI signalling */
 }
 
-void memguard_block_if_needed(struct per_cpu *cpu_data)
+void memguard_block_if_needed(void)
 {
-	volatile struct memguard *memguard = &cpu_data->memguard;
+	volatile struct memguard *memguard = &this_cpu_data()->memguard;
 
 	if (memguard->block == 1) {
 		unsigned long spsr, elr;
@@ -488,11 +514,11 @@ static void memguard_timer_isr(volatile struct memguard *memguard)
 	}
 }
 
-static bool is_memguard_pmu_irq(struct per_cpu *cpu_data, u32 irqn)
+static bool is_memguard_pmu_irq(u32 irqn)
 {
 	u32 reg;
 
-	if (irqn != mach_cpu_id2irqn[cpu_data->cpu_id])
+	if (irqn != mach_cpu_id2irqn[this_cpu_id()])
 		return false;
 
 	arm_read_sysreg(PMOVSCLR_EL0, reg);
@@ -500,27 +526,27 @@ static bool is_memguard_pmu_irq(struct per_cpu *cpu_data, u32 irqn)
 	return (reg & (1 << PMU_INDEX)) != 0;
 }
 
-bool memguard_handle_interrupt(struct per_cpu *cpu_data, u32 irqn)
+bool memguard_handle_interrupt(u32 irqn)
 {
 #if MG_DEBUG == 1
 	static u32 print_cnt = 0;
 
 	if (print_cnt < 100 &&
-	    ((cpu_data->cpu_id == 2 && irqn != 30) ||
+	    ((this_cpu_id() == 2 && irqn != 30) ||
 	     (irqn >= mach_cpu_id2irqn[0] && (irqn <= mach_cpu_id2irqn[3]))))
 	{
 		printk("[%d] Received MG interrupt on CPU %d, nr = %d\n",
-		       ++print_cnt, cpu_data->cpu_id, irqn);
+		       ++print_cnt, this_cpu_id(), irqn);
 		memguard_dump_timer_regs();
 	}
 	
 #endif
 	
-	if (is_memguard_pmu_irq(cpu_data, irqn)) {
-		memguard_pmu_isr(&cpu_data->memguard, cpu_data);
+	if (is_memguard_pmu_irq(irqn)) {
+		memguard_pmu_isr(&this_cpu_data()->memguard);
 		return true;
 	} else if (irqn == MEMGUARD_TIMER_IRQ) {
-		memguard_timer_isr(&cpu_data->memguard);
+		memguard_timer_isr(&this_cpu_data()->memguard);
 		return true;
 	}
 
@@ -532,11 +558,11 @@ void memguard_init(u8 local_irq_target)
 	struct per_cpu *cpu_data = this_cpu_data();
 	struct memguard *memguard = &cpu_data->memguard;
 
-	printk("initializing memguard on CPU %d ", cpu_data->cpu_id);
+	printk("initializing memguard on CPU %d ", this_cpu_id());
 
 	memset(memguard, 0, sizeof(*memguard));
 
-	memguard_pmu_init(cpu_data->cpu_id, local_irq_target);
+	memguard_pmu_init(this_cpu_id(), local_irq_target);
 
 	memguard_timer_init();
 
@@ -567,7 +593,7 @@ void memguard_exit()
 	memguard_pmu_count_disable();
 	memguard_timer_disable();
 
-	memguard_pmu_irq_disable(this_cpu_data()->cpu_id);
+	memguard_pmu_irq_disable(this_cpu_id());
 	memguard_timer_irq_disable();
 
 	/* Make the memguard counter visible again to non-secure mode */
@@ -601,9 +627,10 @@ long memguard_call(unsigned long budget_time, unsigned long budget_memory,
 {
 	u64 retval = 0;
 	u32 freq;
+	
 	struct per_cpu *cpu_data = this_cpu_data();
 	struct memguard *memguard = &cpu_data->memguard;
-
+		
 	/* Prevent race conditions with timer and PMU IRQ handlers */
 	memguard_pmu_count_disable();
 	memguard_timer_disable();
@@ -657,4 +684,29 @@ long memguard_call(unsigned long budget_time, unsigned long budget_memory,
 		memguard_timer_enable();
 
 	return retval;
+}
+
+
+long memguard_call_params(unsigned long params_ptr)
+{
+	unsigned long params_page_offs = params_ptr & ~PAGE_MASK;
+	unsigned int params_pages;
+	void *params_mapping;
+	
+	/* The settings currently reside in kernel memory. Use
+	 * temporary mapping to make the settings readable by the
+	 * hypervisor. No need to clean up the mapping because this is
+	 * only temporary by design. */
+	params_pages = PAGES(params_page_offs + sizeof(struct memguard_params));
+	params_mapping = paging_get_guest_pages(NULL, params_ptr, params_pages,
+					     PAGE_READONLY_FLAGS);
+
+	/* This should never happen. */
+	if (!params_mapping)
+		return -ENOMEM;
+
+	struct memguard_params * params = (struct memguard_params *)
+		(params_mapping + params_page_offs);
+
+	return memguard_call(params->budget_time, params->budget_memory, params->flags);
 }

@@ -17,6 +17,7 @@
 #include <asm/control.h>
 #include <asm/psci.h>
 #include <asm/iommu.h>
+#include <asm/memguard.h>
 
 static void enter_cpu_off(struct public_per_cpu *cpu_public)
 {
@@ -143,6 +144,8 @@ bool arch_handle_phys_irq(u32 irqn, unsigned int count_event)
 			count_event;
 		irqchip_inject_pending();
 
+		return true;
+	} else if (memguard_handle_interrupt(irqn)) {
 		return true;
 	}
 

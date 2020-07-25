@@ -15,12 +15,13 @@
 #include <asm/gic.h>
 #include <asm/gic_v2.h>
 #include <asm/irqchip.h>
+#include <asm/memguard.h>
 
 /* The GICv2 interface numbering does not necessarily match the logical map */
 static u8 gicv2_target_cpu_map[8];
 static unsigned int gic_num_lr;
 
-static void *gicc_base;
+void *gicc_base;
 static void *gich_base;
 
 static u32 gicv2_read_lr(unsigned int i)
@@ -88,6 +89,9 @@ static void gicv2_cpu_reset(struct per_cpu *cpu_data)
 
 	/* Disable PPIs, except for the maintenance interrupt. */
 	mmio_write32(gicd_base + GICD_ICENABLER, 0xffff0000 & ~(1 << mnt_irq));
+
+	/* Initialize MemGuard */
+	memguard_init(gicv2_target_cpu_map[cpu_data->public.cpu_id]);
 
 	/* Deactivate all active PPIs */
 	mmio_write32(gicd_base + GICD_ICACTIVER, 0xffff0000);
@@ -176,6 +180,8 @@ static int gicv2_cpu_init(struct per_cpu *cpu_data)
 		}
 	}
 
+	memguard_init(gicv2_target_cpu_map[cpu_data->public.cpu_id]);
+	
 	return 0;
 }
 
@@ -187,6 +193,9 @@ static int gicv2_cpu_shutdown(struct public_per_cpu *cpu_public)
 	if (!cpu_public->gicc_initialized)
 		return -ENODEV;
 
+	/* Stop MemGuard */
+	memguard_exit();
+	
 	mmio_write32(gich_base + GICH_HCR, 0);
 
 	/* Disable the maintenance interrupt - not used by Linux. */
