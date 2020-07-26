@@ -14,5 +14,6 @@
 
 #define ARCH_PERCPU_FIELDS						\
 	ARM_PERCPU_FIELDS						\
-	unsigned long id_aa64mmfr0;					\
-	struct memguard memguard;
+	struct memguard memguard;					\
+	unsigned long id_aa64mmfr0;					
+

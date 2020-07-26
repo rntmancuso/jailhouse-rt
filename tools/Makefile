@@ -17,7 +17,7 @@ include $(src)/../scripts/include.mk
 
 LD = $(CC) $(KBUILD_CFLAGS)
 NOSTDINC_FLAGS :=
-LINUXINCLUDE := -I$(src)/../driver
+LINUXINCLUDE := -I$(src)/../driver -I$(src)/../include
 KBUILD_CFLAGS := -g -O3 -DLIBEXECDIR=\"$(libexecdir)\" \
 	-Wall -Wextra -Wmissing-declarations -Wmissing-prototypes -Werror \
 	-D__LINUX_COMPILER_TYPES_H \

@@ -392,7 +392,7 @@ hyp_vectors:
 	ventry	.
 
 	handle_vmexit arch_el2_abt
-	ventry	.
+	handle_vmexit irqchip_handle_irq
 	ventry	.
 	ventry	.
 
@@ -416,7 +416,7 @@ hyp_vectors_hardened:
 	ventry	.
 
 	handle_vmexit arch_el2_abt /* no mitigation, we're doomed anyway... */
-	ventry	.
+	handle_vmexit_hardened irqchip_handle_irq
 	ventry	.
 	ventry	.
 

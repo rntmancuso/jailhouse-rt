@@ -17,7 +17,7 @@
 
 #include <jailhouse/types.h>
 #include <asm/percpu.h>
-
+#include <jailhouse/memguard-common.h>
 
 void memguard_init(u8 local_irq_target);
 void memguard_suspend(void);
@@ -40,12 +40,6 @@ void memguard_block_if_needed(void);
 #define MGRET_OVER_MEM_MASK	(1ul << MGRET_OVER_MEM_POS)
 #define MGRET_OVER_TIM_MASK	(1ul << MGRET_OVER_TIM_POS)
 #define MGRET_ERROR_MASK	(1ul << MGRET_ERROR_POS)
-
-struct memguard_params {
-	unsigned long budget_time;
-	unsigned long budget_memory;
-	unsigned long flags;
-};
 
 /**
  * Main MemGuard interface for applications.

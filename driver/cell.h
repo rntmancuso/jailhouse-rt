@@ -55,4 +55,6 @@ int jailhouse_cmd_cell_destroy(const char __user *arg);
 
 int jailhouse_cmd_cell_destroy_non_root(void);
 
+int jailhouse_cmd_cell_memguard(struct jailhouse_memguard_args __user *arg);
+
 #endif /* !_JAILHOUSE_DRIVER_CELL_H */

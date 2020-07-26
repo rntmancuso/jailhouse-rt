@@ -106,10 +106,10 @@ static const int mach_cpu_id2irqn[4] = {
     178
 };
 
-/* On ZCU102, all 256 priority levels are implemented */
-#define IRQ_PRIORITY_MIN		0xFF
+/* On ZCU102, 16 priority levels are implemented in non-secure state */
+#define IRQ_PRIORITY_MIN		0xF0
 #define IRQ_PRIORITY_MAX		0x00
-#define IRQ_PRIORITY_INC		0x01
+#define IRQ_PRIORITY_INC		0x10
 
 #define IRQ_PRIORITY_THR		0x10
 
@@ -270,7 +270,7 @@ static inline void memguard_init_priorities(void)
 	}
 
 	for (i = 0; i < ARRAY_SIZE(mach_cpu_id2irqn); i++) {
-		gicv2_set_prio(mach_cpu_id2irqn[i], IRQ_PRIORITY_MAX);
+		gicv2_set_prio(mach_cpu_id2irqn[i], IRQ_PRIORITY_MAX + IRQ_PRIORITY_INC);
 	}
 
 	gicv2_set_prio(MEMGUARD_TIMER_IRQ, IRQ_PRIORITY_MAX);
@@ -388,7 +388,7 @@ static void memguard_pmu_isr(volatile struct memguard *memguard)
 void memguard_block_if_needed(void)
 {
 	volatile struct memguard *memguard = &this_cpu_data()->memguard;
-
+	
 	if (memguard->block == 1) {
 		unsigned long spsr, elr;
 
@@ -397,8 +397,8 @@ void memguard_block_if_needed(void)
 
 		arm_read_sysreg(ELR_EL2, elr);
 		arm_read_sysreg(SPSR_EL2, spsr);
-		asm volatile("msr daifclr, #3"); /* enable IRQs and FIQs */
-
+		asm volatile("msr daifclr, #3" : : : "memory"); /* enable IRQs and FIQs */
+		
 		/*
 		 * This loop should be race-free. When the timer IRQ
 		 * arrives between the while condition and wfe, it
@@ -408,7 +408,8 @@ void memguard_block_if_needed(void)
 		while (memguard->block)
 			asm volatile("wfe");
 		
-		asm volatile("msr daifset, #3"); /* disable IRQs and FIQs */
+			
+		asm volatile("msr daifset, #3" : : : "memory"); /* disable IRQs and FIQs */
 		arm_write_sysreg(ELR_EL2, elr);
 		arm_write_sysreg(SPSR_EL2, spsr);
 	}
@@ -497,9 +498,10 @@ static void memguard_timer_isr(volatile struct memguard *memguard)
 #if MG_DEBUG == 1
 	u64 timval = memguard_timer_count();
 
-	static u32 print_cnt = 0;
-	if (print_cnt < 100)
-		printk("[%d] _isr_tim p: %u t: %llu\n", ++print_cnt, cntval, timval);
+	static u32 print_cnt[4] = {0, 0, 0, 0};
+	if (print_cnt[this_cpu_id()] < 100)
+		printk("[%d] _isr_tim p: %u t: %llu (CPU %d)\n",
+		       ++print_cnt[this_cpu_id()], cntval, timval, this_cpu_id());
 #endif
 	memguard->time_overrun = true;
 
@@ -517,7 +519,7 @@ static void memguard_timer_isr(volatile struct memguard *memguard)
 static bool is_memguard_pmu_irq(u32 irqn)
 {
 	u32 reg;
-
+	
 	if (irqn != mach_cpu_id2irqn[this_cpu_id()])
 		return false;
 
@@ -531,12 +533,12 @@ bool memguard_handle_interrupt(u32 irqn)
 #if MG_DEBUG == 1
 	static u32 print_cnt = 0;
 
-	if (print_cnt < 100 &&
-	    ((this_cpu_id() == 2 && irqn != 30) ||
+	if ((print_cnt < 100 || this_cpu_data()->memguard.block) &&
+	    ((this_cpu_id() == 2 && irqn != 30 && irqn != 26) ||
 	     (irqn >= mach_cpu_id2irqn[0] && (irqn <= mach_cpu_id2irqn[3]))))
 	{
-		printk("[%d] Received MG interrupt on CPU %d, nr = %d\n",
-		       ++print_cnt, this_cpu_id(), irqn);
+		printk("[%d] Received MG interrupt on CPU %d, nr = %d (block = %d)\n",
+		       ++print_cnt, this_cpu_id(), irqn, this_cpu_data()->memguard.block);
 		memguard_dump_timer_regs();
 	}
 	
@@ -559,7 +561,7 @@ void memguard_init(u8 local_irq_target)
 	struct memguard *memguard = &cpu_data->memguard;
 
 	printk("initializing memguard on CPU %d ", this_cpu_id());
-
+	
 	memset(memguard, 0, sizeof(*memguard));
 
 	memguard_pmu_init(this_cpu_id(), local_irq_target);
@@ -635,8 +637,9 @@ long memguard_call(unsigned long budget_time, unsigned long budget_memory,
 	memguard_pmu_count_disable();
 	memguard_timer_disable();
 
-	printk("memguard_call %lu %lu %lx\n", budget_time, budget_memory, flags);
-
+	printk("memguard_call %lu %lu %lx (CPU %d)\n",
+	       budget_time, budget_memory, flags, this_cpu_id());
+	
 	/* Store statistics since last call for profiling */
 	u64 timval = memguard_timer_count();
 	u32 cntval = memguard_pmu_count();

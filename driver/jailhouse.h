@@ -41,6 +41,8 @@
 
 #include <linux/ioctl.h>
 #include <linux/types.h>
+#include <jailhouse/qos-common.h>
+#include <jailhouse/memguard-common.h>
 
 #define JAILHOUSE_CELL_ID_NAMELEN	31
 
@@ -70,6 +72,16 @@ struct jailhouse_cell_load {
 	struct jailhouse_preload_image image[];
 };
 
+struct jailhouse_memguard_args {
+	struct jailhouse_cell_id cell_id;
+	struct memguard_params params;
+};
+
+struct jailhouse_qos_args {
+	__u32 num_settings;
+	struct qos_setting settings[];
+};
+
 #define JAILHOUSE_CELL_ID_UNUSED	(-1)
 
 #define JAILHOUSE_ENABLE		_IOW(0, 0, void *)
@@ -78,5 +90,7 @@ struct jailhouse_cell_load {
 #define JAILHOUSE_CELL_LOAD		_IOW(0, 3, struct jailhouse_cell_load)
 #define JAILHOUSE_CELL_START		_IOW(0, 4, struct jailhouse_cell_id)
 #define JAILHOUSE_CELL_DESTROY		_IOW(0, 5, struct jailhouse_cell_id)
+#define JAILHOUSE_CELL_MEMGUARD		_IOW(0, 6, struct jailhouse_memguard_args)
+#define JAILHOUSE_QOS		        _IOW(0, 7, struct jailhouse_qos_args)
 
 #endif /* !_JAILHOUSE_DRIVER_H */

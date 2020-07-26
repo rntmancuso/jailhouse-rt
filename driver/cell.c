@@ -535,3 +535,63 @@ int jailhouse_cmd_cell_destroy_non_root(void)
 
 	return 0;
 }
+
+static int __memguard_call_one_cpu(void * args)
+{
+	struct jailhouse_memguard_args * mg_args = (struct jailhouse_memguard_args *)args;
+	
+	return jailhouse_call_arg1(JAILHOUSE_HC_MEMGUARD, __pa(&mg_args->params));
+}
+
+static int memguard_call(struct cell * cell, struct jailhouse_memguard_args * mg_args)
+{
+	unsigned int cpu;
+	int err;
+
+	/* NOTE: not sure on which CPU the memguard call will have an effect!! */
+	for_each_cpu(cpu, &cell->cpus_assigned) {
+		err = smp_call_on_cpu(cpu, __memguard_call_one_cpu, (void *)mg_args, true);
+
+		err &= 1; //MGRET_ERROR_MASK;
+		
+		if (err) {
+			pr_err("Jailhouse memguard call failed on CPU %d\n", cpu);
+			return err;
+		}
+	}
+	
+	return 0;
+}
+
+int jailhouse_cmd_cell_memguard(struct jailhouse_memguard_args __user *arg)
+{
+	struct jailhouse_memguard_args * mg_args;
+	struct cell *cell;
+	int err;
+
+	mg_args = kmalloc(sizeof(struct jailhouse_memguard_args), GFP_USER | __GFP_NOWARN);
+	if (!mg_args)
+		return -ENOMEM;
+	
+	if (copy_from_user(mg_args, arg, sizeof(struct jailhouse_memguard_args)))
+		return -EFAULT;
+	
+	err = cell_management_prologue(&mg_args->cell_id, &cell);
+	if (err)
+		return err;
+
+	err = memguard_call(cell, mg_args);
+
+	kfree(mg_args);
+	
+	if (err) {
+		pr_err("Jailhouse: unable to set memguard parameters for cell \"%s\"\n",
+		       cell->name);
+		return err;
+	}
+	
+	mutex_unlock(&jailhouse_lock);
+
+	return err;
+	
+}

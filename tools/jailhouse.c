@@ -75,7 +75,8 @@ static void __attribute__((noreturn)) help(char *prog, int exit_status)
 	       "             [-a | --address ADDRESS] ...\n"
 	       "   cell start { ID | [--name] NAME }\n"
 	       "   cell shutdown { ID | [--name] NAME }\n"
-	       "   cell destroy { ID | [--name] NAME }\n",
+	       "   cell destroy { ID | [--name] NAME }\n"
+	       "   cell memguard { ID | [--name] NAME } period_ms budget_trans\n",
 	       basename(prog));
 	for (ext = extensions; ext->cmd; ext++)
 		printf("   %s %s %s\n", ext->cmd, ext->subcmd, ext->help);
@@ -503,13 +504,13 @@ static int cell_memguard_cmd(int argc, char *argv[], unsigned int command)
 		exit(1);
 	}
 	mg_args->cell_id = cell_id;
-	mg_args->budget_time = strtoul(argv[4], NULL, 0);
-	mg_args->budget_memory = strtoul(argv[5], NULL, 0);
+	mg_args->params.budget_time = strtoul(argv[4], NULL, 0);
+	mg_args->params.budget_memory = strtoul(argv[5], NULL, 0);
 
-	if (mg_args->budget_time == 0 && mg_args->budget_memory == 0)
-	    mg_args->flags = 0;
+	if (mg_args->params.budget_time == 0 && mg_args->params.budget_memory == 0)
+	    mg_args->params.flags = 0;
 	else
-	    mg_args->flags = 1; //MGF_PERIODIC;
+	    mg_args->params.flags = 1; //MGF_PERIODIC;
 	
 	fd = open_dev();
 

@@ -832,6 +832,10 @@ static long jailhouse_ioctl(struct file *file, unsigned int ioctl,
 	case JAILHOUSE_CELL_DESTROY:
 		err = jailhouse_cmd_cell_destroy((const char __user *)arg);
 		break;
+	case JAILHOUSE_CELL_MEMGUARD:
+		err = jailhouse_cmd_cell_memguard(
+			(struct jailhouse_memguard_args __user *)arg);
+		break;	    
 	default:
 		err = -EINVAL;
 		break;
