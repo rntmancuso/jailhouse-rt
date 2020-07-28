@@ -1,12 +1,14 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Configuration for Xilinx ZynqMP ZCU102 eval board
+ * Configuration for Xilinx ZynqMP ZCU102 eval board with colored
+ * root-cell memory dynamically colored at activation time.
  *
  * Copyright (c) Siemens AG, 2016
  *
  * Authors:
  *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Renato Mancuso (BU) <rmancuso@bu.edu>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -120,8 +122,8 @@ struct {
 				JAILHOUSE_MEM_EXECUTE,
 			},
 			
-			/* Assigning half of the colors */
-			.colors=0x00ff,
+			/* Assigning 3/4 of the colors */
+			.colors=0x0fff,
 		},
 	},
 	

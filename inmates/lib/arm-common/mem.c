@@ -94,7 +94,9 @@ void arch_mmu_enable(void)
 {
 	unsigned long mair, sctlr;
 
-	map_range((void*)CONFIG_INMATE_BASE, 0x10000, MAP_CACHED);
+	map_range((void*)CONFIG_INMATE_BASE, 0x500000, MAP_CACHED);
+	/* Map command and control interface */
+	map_range((void*)0x500000, 0x1000, MAP_CACHED);
 	map_range((void*)COMM_REGION_BASE, PAGE_SIZE, MAP_CACHED);
 
 	/*
