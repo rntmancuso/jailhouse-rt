@@ -30,7 +30,9 @@
 #include <jailhouse/mmio.h>
 #include <asm/coloring.h>
 
-#define smmu_print printk
+#define smmu_print(fmt, ...)			\
+	printk("[SMMUv2] " fmt, ##__VA_ARGS__)
+
 #define SMMUV2_DEBUG 1
 
 /* Offset of addr from start of the page. */
@@ -461,7 +463,7 @@ static void arm_smmu_print_fault_status(struct arm_smmu_device *smmu)
 {
 	u32 reg;
 	int i;
-	
+
 	smmu_print("######## FAULT DUMP #########\n");
 	reg = arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_sGFSR);
 	smmu_print("\t(sGFSR): 0x%08x\n", reg);

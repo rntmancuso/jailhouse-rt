@@ -25,7 +25,9 @@
 #include <jailhouse/mmio.h>
 #include <asm/coloring.h>
 
-#define col_print printk
+#define col_print(fmt, ...)			\
+	printk("[COL] " fmt, ##__VA_ARGS__)
+
 #define COL_DEBUG 1
 
 #define MAX_CACHE_LEVELS            (7)

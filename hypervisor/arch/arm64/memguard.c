@@ -22,6 +22,9 @@
 
 #include <asm/percpu.h>
 
+#define mg_print(fmt, ...)			\
+	printk("[MG] " fmt, ##__VA_ARGS__)
+
 #define MG_DEBUG 0
 
 #if CONFIG_MACH_JETSON_TX2 == 1
@@ -281,13 +284,13 @@ static inline void memguard_dump_timer_regs(void)
 	/* This function dumps the configuration of the timer registers */
 	u64 reg;
 	arm_read_sysreg(CNTPCT_EL0, reg);
-	printk("CNT: %lld\n", reg);
+	mg_print("CNT: %lld\n", reg);
 	
 	arm_read_sysreg(CNTHP_CVAL_EL2, reg);
-	printk("CMP: %lld\n", reg);
+	mg_print("CMP: %lld\n", reg);
 	
 	arm_read_sysreg(CNTHP_CTL_EL2, reg);
-	printk("CTL: %lld\n", reg);
+	mg_print("CTL: %lld\n", reg);
 	
 }
 
@@ -298,11 +301,11 @@ static inline void memguard_print_priorities(void)
 	for (i = 0; i < CCPLEX_IRQ_SIZE / 4; i++) {
 		prio = mmio_read32(gicd_base + GICD_IPRIORITYR + (4 * i));
 		for (j = 0; j < 4; j++) {
-			printk("%3d %02x\n", i * 4 + j, (prio >> (8 * j)) & 0xFF);
+			mg_print("%3d %02x\n", i * 4 + j, (prio >> (8 * j)) & 0xFF);
 		}
 	}
 	prio = mmio_read32(gicc_base + GICC_PMR);
-	printk("mask: 0x%08x\n", prio);
+	mg_print("mask: 0x%08x\n", prio);
 }
 
 static inline u64 memguard_timer_count(void)
@@ -377,7 +380,7 @@ static void memguard_pmu_isr(volatile struct memguard *memguard)
 
 #if MG_DEBUG == 1	
 	if (print_cnt < 100)
-		printk("[%d] _isr_pmu: p: %u t: %llu (CPU %d)\n",
+		mg_print("[%d] _isr_pmu: p: %u t: %llu (CPU %d)\n",
 		       ++print_cnt, cntval, timval, this_cpu_id());
 #endif
 	memguard->memory_overrun = true;
@@ -500,7 +503,7 @@ static void memguard_timer_isr(volatile struct memguard *memguard)
 
 	static u32 print_cnt[4] = {0, 0, 0, 0};
 	if (print_cnt[this_cpu_id()] < 100)
-		printk("[%d] _isr_tim p: %u t: %llu (CPU %d)\n",
+		mg_print("[%d] _isr_tim p: %u t: %llu (CPU %d)\n",
 		       ++print_cnt[this_cpu_id()], cntval, timval, this_cpu_id());
 #endif
 	memguard->time_overrun = true;
@@ -537,7 +540,7 @@ bool memguard_handle_interrupt(u32 irqn)
 	    ((this_cpu_id() == 2 && irqn != 30 && irqn != 26) ||
 	     (irqn >= mach_cpu_id2irqn[0] && (irqn <= mach_cpu_id2irqn[3]))))
 	{
-		printk("[%d] Received MG interrupt on CPU %d, nr = %d (block = %d)\n",
+		mg_print("[%d] Received MG interrupt on CPU %d, nr = %d (block = %d)\n",
 		       ++print_cnt, this_cpu_id(), irqn, this_cpu_data()->memguard.block);
 		memguard_dump_timer_regs();
 	}
@@ -560,9 +563,9 @@ void memguard_init(u8 local_irq_target)
 	struct per_cpu *cpu_data = this_cpu_data();
 	struct memguard *memguard = &cpu_data->memguard;
 
-	printk("initializing memguard on CPU %d ", this_cpu_id());
+	mg_print("Initializing memguard on CPU %d\n", this_cpu_id());
 	
-	memset(memguard, 0, sizeof(*memguard));
+	memset(memguard, 0, sizeof(struct memguard));
 
 	memguard_pmu_init(this_cpu_id(), local_irq_target);
 
@@ -588,7 +591,7 @@ void memguard_suspend()
 
 void memguard_exit()
 {
-	printk("memguard_exit\n");
+	mg_print("memguard_exit\n");
 
 	u32 reg32;
 
@@ -632,12 +635,12 @@ long memguard_call(unsigned long budget_time, unsigned long budget_memory,
 	
 	struct per_cpu *cpu_data = this_cpu_data();
 	struct memguard *memguard = &cpu_data->memguard;
-		
+	
 	/* Prevent race conditions with timer and PMU IRQ handlers */
 	memguard_pmu_count_disable();
 	memguard_timer_disable();
 
-	printk("memguard_call %lu %lu %lx (CPU %d)\n",
+	mg_print("memguard_call %lu %lu %lx (CPU %d)\n",
 	       budget_time, budget_memory, flags, this_cpu_id());
 	
 	/* Store statistics since last call for profiling */
