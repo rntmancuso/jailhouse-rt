@@ -105,19 +105,128 @@ static const struct qos_device devices [QOS_DEVICES] = {
 #define ZCU102_QOS_READ_SMC  0x8400ff04
 #define ZCU102_QOS_WRITE_SMC 0x8400ff05
 
-#define QOS_DEVICES          18
-#define IB_FPDCCI_FPDMAIN    (0x42100)
+#define QOS_DEVICES          				17 /*There are 17 Regulatore with CNTL */
+#define RPUM0_INTLPD_BASE   				(0x42100)
+#define RPUM1_INTLPD_BASE					(0x43100)
+#define ADMAM_INTLPD_IB_BASE				(0x44100)
+#define AFIFM6M_INTLPD_IB_FN_BASE			(0x45100)
+#define DAP_INTLPD_IB_BASE					(0x47100)
+#define USB0M_INTLPD_IB_BASE				(0x48100)
+#define USB1M_INTLPD_IB_BASE				(0x49100)
+#define INTIOU_INTLPD_IB_FN_BASE			(0x4A100)
+#define INTCSUPMU_INTLPD_IB_FN_BASE 		(0x4B100)
+#define INTLPDINBOUND_INTLPDMAIN_FN_BASE	(0x4C100)
+#define INTFPD_INTLPDOCM_FN_BASE			(0x4D100)
+#define IB5_FN_MOD_BASE						(0xC3100)
+#define IB6_FN_MOD_BASE						(0xC4100)
+#define IB8_FN_MOD_BASE						(0xC5100)
+#define IB0_QOS_CNTL_BASE					(0xC6100)
+#define IB11_QOS_CNTL_BASE					(0xC7100)
+#define IB12_QOS_CNTL_BASE					(0xC8100)
 
-/* Add remaining QoS base addresses here */
 
 static const struct qos_device devices [QOS_DEVICES] = {
+	
 	{
-		.name = "fpdmain",
+		.name = "rpum0",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = IB_FPDCCI_FPDMAIN,
+		.base = RPUM0_INTLPD_BASE,
 	},
 
-	/* Add remaining QoS devices here. */
+	{
+		.name = "rpum1",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = RPUM1_INTLPD_BASE,
+	},
+
+	{
+		.name = "admam",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = ADMAM_INTLPD_IB_BASE,
+	},
+
+	{
+		.name = "afifm6m",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = AFIFM6M_INTLPD_IB_FN_BASE,
+	},
+	{
+		.name = "dap",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = DAP_INTLPD_IB_BASE,
+	},
+
+	{
+		.name = "usb0",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = USB0M_INTLPD_IB_BASE,
+	},
+
+	{
+		.name = "usb1",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = USB1M_INTLPD_IB_BASE,
+	},
+
+	{
+		.name = "intiou",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = INTIOU_INTLPD_IB_FN_BASE,
+	},
+
+	{
+		.name = "intcsupmu",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = INTCSUPMU_INTLPD_IB_FN_BASE,
+	},
+
+	{
+		.name = "intlpdinbound",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = INTLPDINBOUND_INTLPDMAIN_FN_BASE,
+	},
+
+	{
+		.name = "intfpd",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = INTFPD_INTLPDOCM_FN_BASE,
+	},
+
+	{
+		.name = "ib5",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = IB5_FN_MOD_BASE,
+	},
+
+	{
+		.name = "ib6",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = IB6_FN_MOD_BASE,
+	},
+
+	{
+		.name = "ib8",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = IB8_FN_MOD_BASE,
+	},
+
+	{
+		.name = "ib0",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = IB0_QOS_CNTL_BASE,
+	},
+
+	{
+		.name = "ib11",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = IB11_QOS_CNTL_BASE,
+	},
+
+	{
+		.name = "ib12",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = IB12_QOS_CNTL_BASE,
+	},
 }; 
 
 /* In the ZCU102, QoS registers require secure access. We must perform
