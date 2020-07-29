@@ -20,10 +20,13 @@
 
 #include <asm/qos.h>
 
+#define qos_print(fmt, ...)			\
+	printk("[QoS] " fmt, ##__VA_ARGS__)
+
 struct qos_device {
 	char name [QOS_DEV_NAMELEN];
 	__u8 flags;
-	__u16 base;
+	__u32 base;
 };
 
 struct qos_param {
@@ -36,22 +39,22 @@ struct qos_param {
 
 /* Apply all the setting provided in the array of settings passed as a
  * paramter */
-int qos_apply_settings(struct qos_setting * settings, int count);
+static int qos_apply_settings(struct qos_setting * settings, int count);
 
 /* Clear the QOS_CNTL register for all the devices */
-int qos_disable_all(void);
+static int qos_disable_all(void);
 
 /* This function sets a given parameter to the desired value. It does
  * not enable the corresponding interface */
-int qos_set_param (const struct qos_device * dev, const struct qos_param * param,
+static int qos_set_param (const struct qos_device * dev, const struct qos_param * param,
 		   unsigned long value);
 
 /* Once we are done setting all the parameters, enable all the affected interfaces */
-void qos_set_enable(const struct qos_device * dev, __u32 value);
+static void qos_set_enable(const struct qos_device * dev, __u32 value);
 
 /* This function returns 1 if the selected device supports setting the
  * considered parameter */
-int qos_dev_is_capable(const struct qos_device * dev, const struct qos_param * param);
+static int qos_dev_is_capable(const struct qos_device * dev, const struct qos_param * param);
 
 
 /* Board-independent QoS support */
@@ -61,6 +64,29 @@ int qos_dev_is_capable(const struct qos_device * dev, const struct qos_param * p
 
 /* Offsets of control registers from beginning of device-specific
  * config space */
+
+/* The typical QoS interface has the following layout:
+ * 
+ * BASE: 0x??80
+ * read_qos    = BASE
+ * write_qos   = + 0x04
+ * fn_mod      = + 0x08
+----- REGULATION ------
+ * qos_cntl    = + 0x0C
+ * max_ot      = + 0x10
+ * max_comb_ot = + 0x14
+ * aw_p        = + 0x18
+ * aw_b        = + 0x1C
+ * aw_r        = + 0x20
+ * ar_p        = + 0x24
+ * ar_b        = + 0x28
+ * ar_r        = + 0x2C
+----- DYNAMIC QOS -----
+ * tgt_latency = + 0x30
+ * ki          = + 0x34
+ * qos_range   = + 0x38
+ */
+
 #define READ_QOS           0x00
 #define WRITE_QOS          0x04
 #define FN_MOD             0x08
@@ -152,116 +178,10 @@ int qos_dev_is_capable(const struct qos_device * dev, const struct qos_param * p
 #define QOS_REG(dev, reg)					\
 	((void *)(nic_base + (__u64)dev->base + (__u64)reg))
 
-/* Board-specific definitions - TO BE MOVED */
-#if defined (CONFIG_MACH_NXP_S32)
-
-#define NIC_BASE           (0x40010000UL)
-#define NIC_SIZE           (16*4096) /* 64KB Aperture */
-
-/* The typical QoS interface has the following layout:
- * 
- * BASE: 0x??80
- * read_qos    = BASE
- * write_qos   = + 0x04
- * fn_mod      = + 0x08
------ REGULATION ------
- * qos_cntl    = + 0x0C
- * max_ot      = + 0x10
- * max_comb_ot = + 0x14
- * aw_p        = + 0x18
- * aw_b        = + 0x1C
- * aw_r        = + 0x20
- * ar_p        = + 0x24
- * ar_b        = + 0x28
- * ar_r        = + 0x2C
------ DYNAMIC QOS -----
- * tgt_latency = + 0x30
- * ki          = + 0x34
- * qos_range   = + 0x38
- */
-
-#define QOS_DEVICES        12
-#define M_FASTDMA1_BASE    (0x2380)
-#define M_GPU0_BASE        (0x2480)
-#define M_H264DEC_BASE     (0x2580)
-#define M_GPU1_BASE        (0x2680)
-#define M_CORES_BASE       (0x2780)
-#define M_PDI0_BASE        (0x3180)
-
-#define PCI_IB19_BASE      (0x6280)
-#define APEX1_IB15_BASE    (0x6380)
-#define APEX0_IB16_BASE    (0x6480)
-#define H264_IB25_BASE     (0x6580)
-#define ENET_IB12_BASE     (0x6680)
-#define AXBS_IB36_BASE     (0x6A80)
-
 /* Mapped NIC device */
-void * nic_base = NULL;
+static void * nic_base = NULL;
 
-static const struct qos_device devices [QOS_DEVICES] = {
-	{
-		.name = "fastdma1",
-		.flags = (FLAGS_HAS_RWQOS | FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = M_FASTDMA1_BASE,
-	},
-	{
-		.name = "gpu0",
-		.flags = (FLAGS_HAS_RWQOS | FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = M_GPU0_BASE,
-	},
-	{
-		.name = "h264dec0",
-		.flags = (FLAGS_HAS_RWQOS | FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = M_H264DEC_BASE,
-	},
-	{
-		.name = "gpu1",
-		.flags = (FLAGS_HAS_RWQOS | FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = M_GPU1_BASE,
-	},
-	{
-		.name = "cores",
-		.flags = (FLAGS_HAS_RWQOS | FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = M_CORES_BASE,
-	},
-	{
-		.name = "pdi0",
-		.flags = (FLAGS_HAS_RWQOS | FLAGS_HAS_REGUL),
-		.base = M_PDI0_BASE,
-	},
-	{
-		.name = "pci",
-		.flags = (FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = PCI_IB19_BASE,
-	},
-	{
-		.name = "apex1",
-		.flags = (FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = APEX1_IB15_BASE,
-	},
-	{
-		.name = "apex0",
-		.flags = (FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = APEX0_IB16_BASE,
-	},
-	{
-		.name = "h264dec1",
-		.flags = (FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = H264_IB25_BASE,
-	},
-	{
-		.name = "enet",
-		.flags = (FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = ENET_IB12_BASE,
-	},
-	{
-		.name = "axbs",
-		.flags = (FLAGS_HAS_REGUL | FLAGS_HAS_DYNQOS),
-		.base = AXBS_IB36_BASE,
-	},
-}; 
-
-#endif
+#include <asm/qos-plat.h>
 
 static const struct qos_param params [QOS_PARAMS] = {
 	{
@@ -449,36 +369,36 @@ static const struct qos_param * qos_param_find_by_name(char * name)
 
 /* This function sets a given parameter to the desired value. It does
  * not enable the corresponding interface */
-int qos_set_param (const struct qos_device * dev, const struct qos_param * param,
+static int qos_set_param (const struct qos_device * dev, const struct qos_param * param,
 	       unsigned long value)
 {
 	/* TODO check that device supports this parameter */
 	int ret = 0;
 
-	printk("QoS: Dev [%s], Param [%s] = 0x%08lx (reg off: +0x%08llx)\n",
+	qos_print("QoS: Dev [%s], Param [%s] = 0x%08lx (reg off: +0x%08llx)\n",
 	       dev->name, param->name, value, (__u64)(QOS_PAR(dev, param) - nic_base));
 	
-	__u32 regval = mmio_read32(QOS_PAR(dev, param));
+	__u32 regval = qos_read32(QOS_PAR(dev, param));
 	regval &= ~(param->mask << param->shift);
 	regval |= ((value & param->mask) << param->shift);
-	mmio_write32(QOS_PAR(dev, param), regval);
+	qos_write32(QOS_PAR(dev, param), regval);
 	
 	return ret;
 }
 
 /* Once we are done setting all the parameters, enable all the affected interfaces */
-void qos_set_enable(const struct qos_device * dev, __u32 value)
+static void qos_set_enable(const struct qos_device * dev, __u32 value)
 {
 	/* Mask away the no-enable bit */
 	value &= ~(1 << EN_NO_ENABLE);
 	
 	/* Set the enable bit in the corresponding device */
-	mmio_write32(QOS_REG(dev, QOS_CNTL), value);
+	qos_write32(QOS_REG(dev, QOS_CNTL), value);
 }
 
 /* This function returns 1 if the selected device supports setting the
  * considered parameter */
-int qos_dev_is_capable(const struct qos_device * dev, const struct qos_param * param)
+static int qos_dev_is_capable(const struct qos_device * dev, const struct qos_param * param)
 {
 	/* TODO to be implemented */
 	return 1;
@@ -487,7 +407,7 @@ int qos_dev_is_capable(const struct qos_device * dev, const struct qos_param * p
 /* Main function to apply a set of QoS paramters passed via the array
  * settings. The length of the array is specified in the second
  * parameter. */
-int qos_apply_settings(struct qos_setting * settings, int count)
+static int qos_apply_settings(struct qos_setting * settings, int count)
 {
 	int ret = 0;
 	int i;
@@ -533,7 +453,7 @@ int qos_apply_settings(struct qos_setting * settings, int count)
 }
 
 /* Clear the QOS_CNTL register for all the devices */
-int qos_disable_all(void)
+static int qos_disable_all(void)
 {
 	int i;
 	for (i = 0; i < QOS_DEVICES; ++i)
@@ -553,7 +473,7 @@ int qos_call(unsigned long count, unsigned long settings_ptr)
 
 	/* Check if the NIC needs to be mapped */
 	if(!nic_base) {
-		nic_base = paging_map_device(NIC_BASE, NIC_SIZE);
+		nic_base = qos_map_device(NIC_BASE, NIC_SIZE);
 		
 		if(!nic_base)
 			return -ENOSYS;

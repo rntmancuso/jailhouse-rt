@@ -14,6 +14,7 @@ void *memcpy(void *d, const void *s, unsigned long n);
 void *memset(void *s, int c, unsigned long n);
 
 int strcmp(const char *s1, const char *s2);
+int strncmp(const char *s1, const char *s2, unsigned long n);
 
 /*
  * Indirect stringification.  Doing two levels allows the parameter to be a

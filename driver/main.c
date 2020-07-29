@@ -805,6 +805,46 @@ unlock_out:
 	return err;
 }
 
+int jailhouse_cmd_qos(struct jailhouse_qos_args __user *arg)
+{
+	struct jailhouse_qos_args qos_args;
+	struct qos_setting * settings;
+
+	__u32 count;
+	int err;
+
+	if (copy_from_user(&qos_args, arg, sizeof(struct jailhouse_qos_args)))
+		return -EFAULT;
+	
+	/* Detect how many settings we need to copy over from user */
+	count = qos_args.num_settings;
+
+	/* Alocate enough memory to store all the settings to pass to JH */
+	settings = (struct qos_setting *)kmalloc(count * sizeof(struct qos_setting),
+						 GFP_KERNEL);
+	
+	if (!settings)
+		return -ENOMEM;
+	
+	/* Copy over settings from user space */
+	if (copy_from_user(settings, &arg->settings[0], count * sizeof(struct qos_setting)))
+		return -EFAULT;
+	
+	/* Invoke QoS hypercall */
+	err = jailhouse_call_arg2(JAILHOUSE_HC_QOS, count, __pa(settings));
+
+	/* Deallocate buffer */
+	kfree(settings);
+
+	if (err) {
+		pr_err("Jailhouse: unable to set QoS settings.\n");
+		return err;
+	}
+	
+	return err;
+	
+}
+
 static long jailhouse_ioctl(struct file *file, unsigned int ioctl,
 			    unsigned long arg)
 {
@@ -835,7 +875,11 @@ static long jailhouse_ioctl(struct file *file, unsigned int ioctl,
 	case JAILHOUSE_CELL_MEMGUARD:
 		err = jailhouse_cmd_cell_memguard(
 			(struct jailhouse_memguard_args __user *)arg);
-		break;	    
+		break;
+	case JAILHOUSE_QOS:
+		err = jailhouse_cmd_qos(
+			(struct jailhouse_qos_args __user *)arg);
+	    break;		
 	default:
 		err = -EINVAL;
 		break;

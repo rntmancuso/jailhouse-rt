@@ -523,6 +523,131 @@ static int cell_memguard_cmd(int argc, char *argv[], unsigned int command)
 	return err;
 }
 
+static int qos_cmd(int argc, char *argv[], unsigned int command)
+{
+	/* The format of a command to set qos parameters is the
+	 * following:
+	 *
+	 * jailhouse qos dev1:param1=value,param2=value dev2:param1=value,param2=value ...
+	 *
+	 * device names and parameter names are defined in qos.c
+	 */
+
+	struct jailhouse_qos_args * qos_args;       
+	unsigned int count = 0;
+	int i, fd, err;
+
+	if (argc <= 2)
+		return -EINVAL;
+	
+	/* First off, let's understand how many parameters need to be
+	 * passed */
+	for (i = 2; i < argc; ++i) {
+		char * cmdarg = argv[i]-1;
+		do {
+			++count;
+		} while((cmdarg = strchr(cmdarg+1, ',')) != NULL);		
+	}
+
+	if (count == 0)
+		goto exit_noalloc;
+	
+	/* Allocate all the memory we need */
+	qos_args = (struct jailhouse_qos_args *)malloc(sizeof(struct jailhouse_qos_args)
+						       + count * sizeof(struct qos_setting));
+
+	qos_args->num_settings = count;
+
+	struct qos_setting * cur_set = &qos_args->settings[0];
+	
+	/* Is this a disable command? */
+	if (strncmp("disable", argv[2], 8) == 0) {
+		strcpy(cur_set->dev_name, "disable");
+		cur_set->param_name[0] = '\0';
+		cur_set->value = 0;
+		qos_args->num_settings = 1;
+		goto apply_settings;
+	}
+	
+	/* Build list of parameters */
+	for (i = 2; i < argc; ++i) {
+		char * start = argv[i];
+		char * end;
+		
+		/* Indicate that this is the first parameter for this
+		 * device*/
+		int first = 1;
+		
+		end = strchr(start, ':');
+		if (!end) 
+			goto exit_err;
+
+		/* Zero-terminate device name */
+		*end = '\0';		
+		
+		/* Set device name */
+		strncpy(cur_set->dev_name, start, QOS_DEV_NAMELEN-1);
+		start = end+1;
+		
+		do {			
+			/* Find where parameter ends and value starts */
+			end = strchr(start, '=');
+			if (!end)
+				goto exit_err;
+			
+			*end = '\0';
+
+			/* Store parameters name */
+			strncpy(cur_set->param_name, start, QOS_PARAM_NAMELEN-1);
+			start = end+1;
+
+			end = strchr(start, ',');
+
+			/* If this is not the last parameter, set terminator */
+			if (end)
+				*end = '\0';
+
+			cur_set->value = strtoul(start, NULL, 0);
+			start = end+1;
+			
+			/* Set the device name to empty if this is not
+			 * the first paramter for this device */
+			if(first) {
+				first = 0;
+			} else {
+				cur_set->dev_name[0] = '\0';
+			}
+			
+			++cur_set;
+			
+			/* If no more commas are found, we are done
+			 * with this device */
+			if (!end)
+				break;
+			
+		} while(1);		
+	}
+
+apply_settings:
+	/* Read to send parameters to kernel driver */
+	fd = open_dev();
+
+	err = ioctl(fd, command, qos_args);
+	if (err)
+		perror("JAILHOUSE_QOS");
+
+	close(fd);
+	free(qos_args);
+
+	return err;
+
+exit_err:
+	free(qos_args);
+exit_noalloc:
+	fprintf(stderr, "QoS: Invalid list of parameters.\n");
+	return -EINVAL;
+	
+}
 
 static int cell_management(int argc, char *argv[])
 {
@@ -616,6 +741,8 @@ int main(int argc, char *argv[])
 		   strcmp(argv[1], "hardware") == 0) {
 		call_extension_script(argv[1], argc, argv);
 		help(argv[0], 1);
+	} else if (strcmp(argv[1], "qos") == 0) {
+		err = qos_cmd(argc, argv, JAILHOUSE_QOS);		
 	} else if (strcmp(argv[1], "--version") == 0) {
 		printf("Jailhouse management tool %s\n", JAILHOUSE_VERSION);
 		return 0;
