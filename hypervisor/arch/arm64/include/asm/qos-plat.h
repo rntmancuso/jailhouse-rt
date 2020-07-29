@@ -105,127 +105,135 @@ static const struct qos_device devices [QOS_DEVICES] = {
 #define ZCU102_QOS_READ_SMC  0x8400ff04
 #define ZCU102_QOS_WRITE_SMC 0x8400ff05
 
-#define QOS_DEVICES          				17 /*There are 17 Regulatore with CNTL */
-#define RPUM0_INTLPD_BASE   				(0x42100)
-#define RPUM1_INTLPD_BASE					(0x43100)
-#define ADMAM_INTLPD_IB_BASE				(0x44100)
-#define AFIFM6M_INTLPD_IB_FN_BASE			(0x45100)
-#define DAP_INTLPD_IB_BASE					(0x47100)
-#define USB0M_INTLPD_IB_BASE				(0x48100)
-#define USB1M_INTLPD_IB_BASE				(0x49100)
-#define INTIOU_INTLPD_IB_FN_BASE			(0x4A100)
-#define INTCSUPMU_INTLPD_IB_FN_BASE 		(0x4B100)
-#define INTLPDINBOUND_INTLPDMAIN_FN_BASE	(0x4C100)
-#define INTFPD_INTLPDOCM_FN_BASE			(0x4D100)
-#define IB5_FN_MOD_BASE						(0xC3100)
-#define IB6_FN_MOD_BASE						(0xC4100)
-#define IB8_FN_MOD_BASE						(0xC5100)
-#define IB0_QOS_CNTL_BASE					(0xC6100)
-#define IB11_QOS_CNTL_BASE					(0xC7100)
-#define IB12_QOS_CNTL_BASE					(0xC8100)
+#define QOS_DEVICES          				18 /*There are 18 Regulatore with CNTL */
+#define M_RPU0_BASE			   				(0x42100)
+#define M_RPU1_BASE							(0x43100)
+#define M_ADMA_BASE 						(0x44100)
+#define M_AFIFM0_BASE						(0x45100)
+#define M_AFIFM1_BASE						(0x46100)
+#define M_AFIFM2_BASE						(0x47100)
+#define M_INITFPDSMMUTBU5_BASE				(0x48100)
+#define M_DP_BASE							(0x49100)
+#define M_AFIFM3_BASE						(0x4A100)
+#define M_AFIFM4_BASE						(0x4B100)
+#define M_AFIFM5_BASE						(0x4C100)
+#define M_GPU_BASE 							(0x4D100)
+#define M_PCIE_BASE							(0x4E100)
+#define M_GDMA_BASE							(0x4F100)
+#define M_SATA_BASE 						(0x50100)
+#define M_CORESIGHT_BASE 					(0x52100)
+#define ISS_IB2_BASE						(0xC2100)
+#define ISS_IB6_BASE						(0xC3100)
+
 
 
 static const struct qos_device devices [QOS_DEVICES] = {
 	
 	{
-		.name = "rpum0",
+		.name = "rpu0",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = RPUM0_INTLPD_BASE,
+		.base = M_RPU0_BASE,
 	},
 
 	{
-		.name = "rpum1",
+		.name = "rpu1",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = RPUM1_INTLPD_BASE,
+		.base = M_RPU1_BASE,
 	},
 
 	{
-		.name = "admam",
+		.name = "adma",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = ADMAM_INTLPD_IB_BASE,
+		.base = M_ADMA_BASE,
 	},
 
 	{
-		.name = "afifm6m",
+		.name = "afifm0",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = AFIFM6M_INTLPD_IB_FN_BASE,
+		.base = M_AFIFM0_BASE,
 	},
 	{
-		.name = "dap",
+		.name = "afifm1",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = DAP_INTLPD_IB_BASE,
-	},
-
-	{
-		.name = "usb0",
-		.flags = (FLAGS_HAS_REGUL),
-		.base = USB0M_INTLPD_IB_BASE,
+		.base = M_AFIFM1_BASE,
 	},
 
 	{
-		.name = "usb1",
+		.name = "afifm2",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = USB1M_INTLPD_IB_BASE,
+		.base = M_AFIFM2_BASE,
 	},
 
 	{
-		.name = "intiou",
+		.name = "smmutbu5",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = INTIOU_INTLPD_IB_FN_BASE,
+		.base = M_INITFPDSMMUTBU5_BASE,
 	},
 
 	{
-		.name = "intcsupmu",
+		.name = "dp",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = INTCSUPMU_INTLPD_IB_FN_BASE,
+		.base = M_DP_BASE,
 	},
 
 	{
-		.name = "intlpdinbound",
+		.name = "afifm3",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = INTLPDINBOUND_INTLPDMAIN_FN_BASE,
+		.base = M_AFIFM3_BASE,
 	},
 
 	{
-		.name = "intfpd",
+		.name = "afifm4",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = INTFPD_INTLPDOCM_FN_BASE,
+		.base = M_AFIFM4_BASE,
 	},
 
 	{
-		.name = "ib5",
+		.name = "afifm5",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = IB5_FN_MOD_BASE,
+		.base = M_AFIFM5_BASE,
 	},
 
 	{
-		.name = "ib6",
+		.name = "gpu",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = IB6_FN_MOD_BASE,
+		.base = M_GPU_BASE,
 	},
 
 	{
-		.name = "ib8",
+		.name = "pcie",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = IB8_FN_MOD_BASE,
+		.base = M_PCIE_BASE,
 	},
 
 	{
-		.name = "ib0",
+		.name = "gdma",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = IB0_QOS_CNTL_BASE,
+		.base = M_GDMA_BASE,
 	},
 
 	{
-		.name = "ib11",
+		.name = "sata",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = IB11_QOS_CNTL_BASE,
+		.base = M_SATA_BASE,
 	},
 
 	{
-		.name = "ib12",
+		.name = "coresight",
 		.flags = (FLAGS_HAS_REGUL),
-		.base = IB12_QOS_CNTL_BASE,
+		.base = M_CORESIGHT_BASE,
+	},
+
+	{
+		.name = "issib2",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = ISS_IB2_BASE,
+	},
+
+	{
+		.name = "issib6",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = ISS_IB6_BASE,
 	},
 }; 
 
