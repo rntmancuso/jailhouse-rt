@@ -99,33 +99,44 @@ static const struct qos_device devices [QOS_DEVICES] = {
 
 #include <asm/smc.h>
 
-#define NIC_BASE             (0x40010000UL)
-#define NIC_SIZE             (1024*1024) /* 1MB Aperture */
+/* 
+ * Only support for FPD_GPV QoS regulators is currently available for
+ * the ZCU102. 
+ * 
+ * The layout of the following regulators has been extracted from:
+ * https://www.xilinx.com/html_docs/registers/ug1087/ug1087-zynq-ultrascale-registers.html
+ *
+ * NOTE: On the ZCU102, the FPD_GPV registers are accessible only from
+ * EL3. In order for JH to be able to access these registers, the ATF
+ * should be patched to allow read/write operations through the two
+ * services defined below (ZCU102_QOS_READ_SMC and
+ * ZCU102_QOS_WRITE_SMC)
+ */
+#define NIC_BASE                (0xfd700000)
+#define NIC_SIZE                (1024*1024) /* 1MB Aperture */
 
-#define ZCU102_QOS_READ_SMC  0x8400ff04
-#define ZCU102_QOS_WRITE_SMC 0x8400ff05
+#define ZCU102_QOS_READ_SMC     0x8400ff04
+#define ZCU102_QOS_WRITE_SMC    0x8400ff05
 
-#define QOS_DEVICES          				18 /*There are 18 Regulatore with CNTL */
-#define M_RPU0_BASE			   				(0x42100)
-#define M_RPU1_BASE							(0x43100)
-#define M_ADMA_BASE 						(0x44100)
-#define M_AFIFM0_BASE						(0x45100)
-#define M_AFIFM1_BASE						(0x46100)
-#define M_AFIFM2_BASE						(0x47100)
-#define M_INITFPDSMMUTBU5_BASE				(0x48100)
-#define M_DP_BASE							(0x49100)
-#define M_AFIFM3_BASE						(0x4A100)
-#define M_AFIFM4_BASE						(0x4B100)
-#define M_AFIFM5_BASE						(0x4C100)
-#define M_GPU_BASE 							(0x4D100)
-#define M_PCIE_BASE							(0x4E100)
-#define M_GDMA_BASE							(0x4F100)
-#define M_SATA_BASE 						(0x50100)
-#define M_CORESIGHT_BASE 					(0x52100)
-#define ISS_IB2_BASE						(0xC2100)
-#define ISS_IB6_BASE						(0xC3100)
-
-
+#define QOS_DEVICES     	18 /*There are 18 Regulatore with CNTL */
+#define M_RPU0_BASE		(0x42100)
+#define M_RPU1_BASE		(0x43100)
+#define M_ADMA_BASE 		(0x44100)
+#define M_AFIFM0_BASE		(0x45100)
+#define M_AFIFM1_BASE		(0x46100)
+#define M_AFIFM2_BASE		(0x47100)
+#define M_INITFPDSMMUTBU5_BASE	(0x48100)
+#define M_DP_BASE		(0x49100)
+#define M_AFIFM3_BASE		(0x4A100)
+#define M_AFIFM4_BASE		(0x4B100)
+#define M_AFIFM5_BASE		(0x4C100)
+#define M_GPU_BASE 		(0x4D100)
+#define M_PCIE_BASE		(0x4E100)
+#define M_GDMA_BASE		(0x4F100)
+#define M_SATA_BASE 		(0x50100)
+#define M_CORESIGHT_BASE	(0x52100)
+#define ISS_IB2_BASE		(0xC2100)
+#define ISS_IB6_BASE		(0xC3100)
 
 static const struct qos_device devices [QOS_DEVICES] = {
 	
