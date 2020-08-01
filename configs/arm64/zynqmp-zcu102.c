@@ -20,7 +20,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[12];
+	struct jailhouse_memory mem_regions[17];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[2];
 } __attribute__((packed)) config = {
@@ -53,6 +53,7 @@ struct {
 				.maintenance_irq = 25,
 			},
 		},
+
 		.root_cell = {
 			.name = "ZynqMP-ZCU102",
 
@@ -102,6 +103,42 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO,
 		},
+
+		/* TCM region for the R5 */ {
+			.phys_start = 0xffe00000,
+			.virt_start = 0xffe00000,
+			.size = 0xC0000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* DDR 0 region for the R5 */ {
+			.phys_start = 0x3ed00000,
+			.virt_start = 0x3ed00000,
+			.size = 0x100000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* DDR 1 region for the R5 */ {
+			.phys_start = 0x3ed40000,
+			.virt_start = 0x3ed40000,
+			.size = 0x100000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* proc 0 region for the R5 */ {
+			.phys_start = 0xff9a0100,
+			.virt_start = 0xff9a0100,
+			.size = 0x100,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* proc 1 region for the R5 */ {
+			.phys_start = 0xff9a0200,
+			.virt_start = 0xff9a0200,
+			.size = 0x100,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
 	},
 
 	.irqchips = {
