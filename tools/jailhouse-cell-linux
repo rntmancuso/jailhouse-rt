@@ -22,7 +22,7 @@ sys.path[0] = os.path.dirname(os.path.abspath(__file__)) + "/.."
 from pyjailhouse.cell import JailhouseCell
 import pyjailhouse.config_parser as config_parser
 
-libexecdir = None
+libexecdir = "./inmates/tools/arm64/"
 
 
 def page_align(value, page_size=0x1000):
@@ -731,7 +731,7 @@ if args.write_params:
     arch.write_params(args, config)
 else:
     if libexecdir:
-        linux_loader = libexecdir + '/jailhouse/linux-loader.bin'
+        linux_loader = libexecdir + 'linux-loader.bin'
     else:
         linux_loader = os.path.abspath(os.path.dirname(sys.argv[0])) + \
             '/../inmates/tools/' + arch.name + '/linux-loader.bin'

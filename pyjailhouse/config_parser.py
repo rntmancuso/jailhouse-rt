@@ -136,7 +136,7 @@ class PIORegion:
 
 
 class CellConfig:
-    _HEADER_FORMAT = '=6sH32s4xIIIIIIIIIIQ8x32x'
+    _HEADER_FORMAT = '=6sH32s4xIIIIIIIIIIQI8x32x'
 
     def __init__(self, data, root_cell=False):
         self.data = data
@@ -155,7 +155,8 @@ class CellConfig:
              self.num_pci_caps,
              self.num_stream_ids,
              self.vpci_irq_base,
-             self.cpu_reset_address) = \
+             self.cpu_reset_address,
+             self.num_memory_regions_colored) = \
                 struct.unpack_from(CellConfig._HEADER_FORMAT, self.data)
             if not root_cell:
                 if str(signature.decode()) != 'JHCELL':

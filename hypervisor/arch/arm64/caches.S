@@ -72,10 +72,10 @@ arm_dcaches_flush:
 	dsb	sy
 	ret
 
-#define LEVEL_SHIFT		1U
-#define LOUIS_SHIFT		21U
-#define CLIDR_FIELD_WIDTH	3U	
-#define LOC_SHIFT		24U
+#define LEVEL_SHIFT		1
+#define LOUIS_SHIFT		21
+#define CLIDR_FIELD_WIDTH	3	
+#define LOC_SHIFT		24
 
 
 .macro func _name, _align=5
