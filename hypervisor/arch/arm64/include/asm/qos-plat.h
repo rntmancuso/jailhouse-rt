@@ -115,16 +115,43 @@ static const struct qos_device devices [QOS_DEVICES] = {
 #define NIC_BASE                (0xfd700000)
 #define NIC_SIZE                (1024*1024) /* 1MB Aperture */
 
+
+/* There are three QoS address ranges in the ZCU 102 */
+
+#define LPD_GPV_BASE			0xFE100000
+#define FPD_GPV_BASE			0xFD700000
+
+
 #define ZCU102_QOS_READ_SMC     0x8400ff04
 #define ZCU102_QOS_WRITE_SMC    0x8400ff05
 
-#define QOS_DEVICES     	18 /*There are 18 Regulatore with CNTL */
+#define QOS_DEVICES     	35 /*There are 18 Regulatore with CNTL */
+/* Peripherials in LPD with QoS Support */
 #define M_RPU0_BASE		(0x42100)
 #define M_RPU1_BASE		(0x43100)
-#define M_ADMA_BASE 		(0x44100)
-#define M_AFIFM0_BASE		(0x45100)
-#define M_AFIFM1_BASE		(0x46100)
-#define M_AFIFM2_BASE		(0x47100)
+#define M_ADMA_BASE 	(0x44100)
+#define M_AFIFM6_BASE	(0x45100)
+#define M_DAP_BASE		(0x47100)	
+#define M_USB0_BASE		(0x48100)
+#define M_USB1_BASE		(0x49100)
+#define M_INTIOU_BASE	(0x4A100)
+#define M_INTCSUPMU_BASE		(0x4B100)
+#define M_INTLPDINBOUND_BASE	(0x4C100)
+#define M_INTLPDOCM_BASE	(0x4D100)
+#define M_IB5_BASE 		(0xC3100)
+#define M_IB6_BASE		(0xC4100)
+#define M_IB8_BASE 		(0xC5100)
+#define M_IB0_BASE		(0xC6100)
+#define M_IB11_BASE 	(0xC7100)
+#define M_IB12_BASE 	(0xC8100)
+
+/* Peripherials in FPD with QoS Support */
+#define M_INTFPDCCI_BASE 	(0x42100)
+#define M_INTFPDSMMUTBU3_BASE	(0x43100)
+#define M_INTFPDSMMUTBU4_BASE	(0x44100)
+#define M_AFIFM0_BASE	(0x45100)
+#define M_AFIFM1_BASE	(0x46100)
+#define M_AFIFM2_BASE	(0x47100)
 #define M_INITFPDSMMUTBU5_BASE	(0x48100)
 #define M_DP_BASE		(0x49100)
 #define M_AFIFM3_BASE		(0x4A100)
@@ -159,10 +186,107 @@ static const struct qos_device devices [QOS_DEVICES] = {
 	},
 
 	{
+		.name = "afifm6",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_AFIFM0_BASE,
+	},
+
+	{
+		.name = "dap",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_DAP_BASE,
+	},
+
+	{
+		.name = "usb0",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_USB0_BASE,
+	},
+
+	{
+		.name = "intiou",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_INTIOU_BASE,
+	},
+
+	{
+		.name = "csupmu",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_INTCSUPMU_BASE,
+	},
+
+	{
+		.name = "lpdinbound",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_INTLPDINBOUND_BASE,
+	},
+
+	{
+		.name = "lpdocm",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_INTLPDOCM_BASE,
+	},
+
+	{
+		.name = "ib5",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_IB5_BASE,
+	},
+
+	{
+		.name = "ib6",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_IB6_BASE,
+	},
+
+	{
+		.name = "ib8",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_IB8_BASE,
+	},
+
+	{
+		.name = "ib0",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_IB0_BASE,
+	},
+
+	{
+		.name = "ib11",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_IB11_BASE,
+	},
+
+	{
+		.name = "ib12",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_IB12_BASE,
+	},
+
+	{
+		.name = "fpdcci",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_INTFPDCCI_BASE,
+	},
+
+	{
+		.name = "smmutbu3",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_INTFPDSMMUTBU3_BASE,
+	},
+
+	{
+		.name = "smmutbu4",
+		.flags = (FLAGS_HAS_REGUL),
+		.base = M_INTFPDSMMUTBU3_BASE,
+	},
+
+	{
 		.name = "afifm0",
 		.flags = (FLAGS_HAS_REGUL),
 		.base = M_AFIFM0_BASE,
 	},
+
 	{
 		.name = "afifm1",
 		.flags = (FLAGS_HAS_REGUL),
