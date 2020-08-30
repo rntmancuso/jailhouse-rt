@@ -20,7 +20,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[17];
+	struct jailhouse_memory mem_regions[24];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[2];
 } __attribute__((packed)) config = {
@@ -42,6 +42,7 @@ struct {
 		.platform_info = {
 			.pci_mmconfig_base = 0xfc000000,
 			.pci_mmconfig_end_bus = 0,
+
 			.pci_is_virtual = 1,
 			.pci_domain = -1,
 			.arm = {
@@ -88,6 +89,13 @@ struct {
 			.size = 0x80000000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE,
+		},
+		/* For LPD Port */ {
+			.phys_start = 0x80000000,
+			.virt_start = 0x80000000,
+			.size = 0x4000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | 
+				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_IO,
 		},
 		/* RAM */ {
 			.phys_start = 0x800600000,
@@ -136,6 +144,34 @@ struct {
 			.phys_start = 0xff9a0200,
 			.virt_start = 0xff9a0200,
 			.size = 0x100,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* For HPM */ {
+			.phys_start = 0x400000000,
+			.virt_start = 0x400000000,
+			.size = 0x10000000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* For HPM */ {
+			.phys_start = 0x410000000,
+			.virt_start = 0x410000000,
+			.size = 0x10000000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* For HPM  */ {
+			.phys_start = 0x420000000,
+			.virt_start = 0x420000000,
+			.size = 0x10000000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* For HPM  */ {
+			.phys_start = 0x430000000,
+			.virt_start = 0x430000000,
+			.size = 0x10000000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
 		},
 

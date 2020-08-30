@@ -5,7 +5,7 @@
  *
  * Authors:
  *  Renato Mancuso <rmancuso@bu.edu>
- *
+ *  Rohan Tabish <rtabish@illinois.edu>
  * This work is licensed under the terms of the GNU GPL, version 2.
  * See the COPYING file in the top-level directory.
  */
@@ -118,8 +118,7 @@ static const struct qos_device devices [QOS_DEVICES] = {
 
 /* There are three QoS address ranges in the ZCU 102 */
 
-#define LPD_GPV_BASE			0xFE100000
-#define FPD_GPV_BASE			0xFD700000
+#define LPD_OFFSET 		0xA00000	//LPD_OFFSET (0xFE100000) -	(0xFD700000) = 0xA00000
 
 
 #define ZCU102_QOS_READ_SMC     0x8400ff04
@@ -127,23 +126,23 @@ static const struct qos_device devices [QOS_DEVICES] = {
 
 #define QOS_DEVICES     	35 /*There are 18 Regulatore with CNTL */
 /* Peripherials in LPD with QoS Support */
-#define M_RPU0_BASE		(0x42100)
-#define M_RPU1_BASE		(0x43100)
-#define M_ADMA_BASE 	(0x44100)
-#define M_AFIFM6_BASE	(0x45100)
-#define M_DAP_BASE		(0x47100)	
-#define M_USB0_BASE		(0x48100)
-#define M_USB1_BASE		(0x49100)
-#define M_INTIOU_BASE	(0x4A100)
-#define M_INTCSUPMU_BASE		(0x4B100)
-#define M_INTLPDINBOUND_BASE	(0x4C100)
-#define M_INTLPDOCM_BASE	(0x4D100)
-#define M_IB5_BASE 		(0xC3100)
-#define M_IB6_BASE		(0xC4100)
-#define M_IB8_BASE 		(0xC5100)
-#define M_IB0_BASE		(0xC6100)
-#define M_IB11_BASE 	(0xC7100)
-#define M_IB12_BASE 	(0xC8100)
+#define M_RPU0_BASE		LPD_OFFSET + (0x42100)
+#define M_RPU1_BASE		LPD_OFFSET + (0x43100)
+#define M_ADMA_BASE 	LPD_OFFSET + (0x44100)
+#define M_AFIFM6_BASE	LPD_OFFSET + (0x45100)
+#define M_DAP_BASE		LPD_OFFSET + (0x47100)	
+#define M_USB0_BASE		LPD_OFFSET + (0x48100)
+#define M_USB1_BASE		LPD_OFFSET + (0x49100)
+#define M_INTIOU_BASE	LPD_OFFSET + (0x4A100)
+#define M_INTCSUPMU_BASE		LPD_OFFSET + (0x4B100)
+#define M_INTLPDINBOUND_BASE	LPD_OFFSET + (0x4C100)
+#define M_INTLPDOCM_BASE	LPD_OFFSET + (0x4D100)
+#define M_IB5_BASE 		LPD_OFFSET + (0xC3100)
+#define M_IB6_BASE		LPD_OFFSET + (0xC4100)
+#define M_IB8_BASE 		LPD_OFFSET + (0xC5100)
+#define M_IB0_BASE		LPD_OFFSET + (0xC6100)
+#define M_IB11_BASE 	LPD_OFFSET + (0xC7100)
+#define M_IB12_BASE 	LPD_OFFSET + (0xC8100)
 
 /* Peripherials in FPD with QoS Support */
 #define M_INTFPDCCI_BASE 	(0x42100)
@@ -166,7 +165,7 @@ static const struct qos_device devices [QOS_DEVICES] = {
 #define ISS_IB6_BASE		(0xC3100)
 
 static const struct qos_device devices [QOS_DEVICES] = {
-	
+	/* LPD Start here */
 	{
 		.name = "rpu0",
 		.flags = (FLAGS_HAS_REGUL),
@@ -262,7 +261,7 @@ static const struct qos_device devices [QOS_DEVICES] = {
 		.flags = (FLAGS_HAS_REGUL),
 		.base = M_IB12_BASE,
 	},
-
+	/* GPV Start here */
 	{
 		.name = "fpdcci",
 		.flags = (FLAGS_HAS_REGUL),
