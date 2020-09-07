@@ -60,7 +60,7 @@ static inline int smc_arg4(unsigned long id, unsigned long par1, unsigned long p
 	asm volatile ("smc #0\n\t"
 		: "=r" (__id)
 		: "r"(__id), "r"(__par1), "r"(__par2), "r"(__par3), "r"(__par4)
-		: "memory", "x6");
+		: "memory", "x4");
 
 	return __id;
 }

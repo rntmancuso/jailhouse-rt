@@ -124,7 +124,7 @@ static const struct qos_device devices [QOS_DEVICES] = {
 #define ZCU102_QOS_READ_SMC     0x8400ff04
 #define ZCU102_QOS_WRITE_SMC    0x8400ff05
 
-#define QOS_DEVICES     	35 /*There are 18 Regulatore with CNTL */
+#define QOS_DEVICES     	35  /*There are 35 Regulatore with CNTL */
 /* Peripherials in LPD with QoS Support */
 #define M_RPU0_BASE		LPD_OFFSET + (0x42100)
 #define M_RPU1_BASE		LPD_OFFSET + (0x43100)

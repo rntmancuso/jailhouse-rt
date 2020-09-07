@@ -147,31 +147,10 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
 		},
 
-		/* For HPM */ {
+		/* For HPM  */ {
 			.phys_start = 0x400000000,
 			.virt_start = 0x400000000,
-			.size = 0x10000000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-		},
-
-		/* For HPM */ {
-			.phys_start = 0x410000000,
-			.virt_start = 0x410000000,
-			.size = 0x10000000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-		},
-
-		/* For HPM  */ {
-			.phys_start = 0x420000000,
-			.virt_start = 0x420000000,
-			.size = 0x10000000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-		},
-
-		/* For HPM  */ {
-			.phys_start = 0x430000000,
-			.virt_start = 0x430000000,
-			.size = 0x10000000,
+			.size = 0x40000000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
 		},
 
