@@ -380,6 +380,13 @@ el1_trap:
 	eret
 .endm
 
+.macro handle_fiq exit_reason
+	.align	7
+	dsb     sy
+	eret 
+.endm
+
+
 /*
  * These are the default vectors. They are used on early startup and if no
  * Spectre v2 mitigation is available.
@@ -393,12 +400,12 @@ hyp_vectors:
 
 	handle_vmexit arch_el2_abt
 	handle_vmexit irqchip_handle_irq
-	ventry	.
+	handle_fiq EXIT_REASON_EL2_FIQ	
 	ventry	.
 
 	handle_vmexit arch_handle_trap
 	handle_vmexit irqchip_handle_irq
-	ventry	.
+	handle_fiq EXIT_REASON_EL1_FIQ
 	ventry	.
 
 	ventry	.

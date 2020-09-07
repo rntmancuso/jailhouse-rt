@@ -40,6 +40,7 @@
 #define CCPLEX_IRQ_SIZE			384
 #define MEMGUARD_TIMER_IRQ		26
 
+
 /* Conversion from cpu_id to PMU IRQ number
  *
  * Number 296 is defined in device tree which corresponds to:
@@ -101,6 +102,8 @@ static const int mach_cpu_id2irqn[4] = {
 */
 #define CCPLEX_IRQ_SIZE			188
 #define MEMGUARD_TIMER_IRQ		26 /* Non-secure physical timer */
+#define FIQEn                           3
+#define EnableGrp0                      0
 
 static const int mach_cpu_id2irqn[4] = {
     175,
@@ -456,6 +459,66 @@ static inline void memguard_timer_irq_enable(void)
 	mmio_write32(gicd_base + GICD_ISENABLER, (1 << MEMGUARD_TIMER_IRQ));
 }
 
+
+
+static inline void memoredf_fiq_enable(void){
+
+
+        /* Enable forwarding of Group 0 interrupts from the Distributor to the CPU interfaces by setting GICD_CTLR.EnableGrp0 */
+        u32 p;
+	p = mmio_read32(gicd_base + GICD_CTLR);
+        mmio_write32(gicd_base + GICD_CTLR , p | 0x1 );
+
+	printk("GICD_CTLR content: %u ------ \n",p);
+	
+      	/* Set the priority value of interrupt ID #121 (for example to 0x0) by writing to GICD_IPRIORITYR0 */
+	gicv2_set_prio(121, 0x0);
+	gicv2_set_prio(122, 0x0);
+	gicv2_set_prio(123, 0x0);
+	gicv2_set_prio(124, 0x0);
+
+	/* Enable interrupt ID  by setting bit [id] of GICD_ISENABLER0 */
+	mmio_write32(gicd_base + GICD_ISENABLER + IRQ_BIT_OFFSET(121),
+		     1 << IRQ_BIT_POSITION(121));
+	gicv2_set_targets(121,(0x1));
+	
+	mmio_write32(gicd_base + GICD_ISENABLER + IRQ_BIT_OFFSET(122),
+		     1 << IRQ_BIT_POSITION(122));
+	gicv2_set_targets(122,(0x1 << 1));
+
+	mmio_write32(gicd_base + GICD_ISENABLER + IRQ_BIT_OFFSET(123),
+		     1 << IRQ_BIT_POSITION(123));
+	gicv2_set_targets(123,(0x1 << 2));
+
+	mmio_write32(gicd_base + GICD_ISENABLER + IRQ_BIT_OFFSET(124),
+		     1 << IRQ_BIT_POSITION(124));
+	gicv2_set_targets(124,(0x1 << 3));
+
+	
+
+	/* /\* Set the priority mask value to a lower priority than that of the chosen interrupt (for example to 0x10) by writing to GICC_PMR *\/ */
+	/* //memguard_mask_interrupts(); */
+
+	/* Once enabled, declare it as Group0 */
+	/* p = mmio_read32(gicd_base + GICD_IGROUPR + IRQ_BIT_OFFSET(MEMOREDF_FIQ)); */
+	/* mmio_write32(gicd_base + GICD_IGROUPR + IRQ_BIT_OFFSET(MEMOREDF_FIQ), */
+	/* 	     ~(15 << IRQ_BIT_POSITION(MEMOREDF_FIQ)) & p ); */
+
+
+	
+	/* printk("GICD_IGROUPR content: %u --------\n",~(1 << IRQ_BIT_POSITION(MEMOREDF_FIQ)) & p ); */
+	/* /\* Enable signalling of Group 0 interrupts from the CPU interface to the CPU, as well as signalling Group 0 interrupts as FIQs, by setting GICC_CTLR.FIQEn and GICC_CTLR.EnableGrp0 *\/ */
+	
+	p = mmio_read32(gicc_base + GICC_CTLR);
+	mmio_write32(gicc_base + GICC_CTLR , p | (0x1 << FIQEn ) | (0x1 << EnableGrp0) );
+	printk("GICC_CTLR content: %u --------\n",p);
+	printk("-----------------fiq_enable activated---------------");
+}
+
+
+
+
+
 static inline void memguard_timer_irq_disable(void)
 {
 	u32 reg;
@@ -492,6 +555,7 @@ static inline void memguard_timer_init(void)
 	/* Set compare value to 200 years from 0 */
 	memguard_timer_set_cmpval(UINT64_MAX);
 	memguard_timer_irq_enable();
+	memoredf_fiq_enable();
 }
 
 static void memguard_timer_isr(volatile struct memguard *memguard)
@@ -533,6 +597,8 @@ static bool is_memguard_pmu_irq(u32 irqn)
 
 bool memguard_handle_interrupt(u32 irqn)
 {
+  //Added by Shahin
+  //    printk("irq num is : %d", irqn );
 #if MG_DEBUG == 1
 	static u32 print_cnt = 0;
 
@@ -553,7 +619,19 @@ bool memguard_handle_interrupt(u32 irqn)
 	} else if (irqn == MEMGUARD_TIMER_IRQ) {
 		memguard_timer_isr(&this_cpu_data()->memguard);
 		return true;
-	}
+	}/*  else if (irqn == 121){ */
+	/*    printk("Received a signal 121 \n"); */
+	/*   return true; */
+	/* } else if (irqn == 122){ */
+	/*    printk("Received a signal 122 \n"); */
+	/*   return true; */
+	/* } else if (irqn == 123){ */
+	/*    printk("Received a signal 123 \n"); */
+	/*   return true; */
+	/* } else if (irqn == 124){ */
+	/*    printk("Received a signal 124 \n"); */
+	/*   return true; */
+	/* } */
 
 	return false;
 }

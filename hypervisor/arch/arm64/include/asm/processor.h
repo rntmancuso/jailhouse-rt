@@ -16,6 +16,10 @@
 #include <jailhouse/types.h>
 #include <jailhouse/utils.h>
 
+#define EXIT_REASON_EL1_FIQ 0x4
+#define EXIT_REASON_EL2_FIQ 0x5
+
+
 #define NUM_USR_REGS		31
 
 #ifndef __ASSEMBLY__
