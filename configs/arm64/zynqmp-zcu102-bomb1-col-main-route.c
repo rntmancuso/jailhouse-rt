@@ -19,10 +19,10 @@
 #define xstr(s) str(s)
 #define str(s) #s
 
-#define BOMB_ID             0
+#define BOMB_ID             1
 #define BOMB_CPU            1 << (BOMB_ID + 1)
 #define MAIN_SIZE           0x500000
-#define MAIN_PHYS_START     (0x1001200000 + BOMB_ID * 16 * MAIN_SIZE)
+#define MAIN_PHYS_START     (0x801200000 + BOMB_ID * 16 * MAIN_SIZE)
 #define COMM_PHYS_ADDR      (0x820000000 + BOMB_ID * 0x1000)
 
 struct {
@@ -91,7 +91,7 @@ struct {
 			},
 
 			/* Assigning 1/4 of the colors */
-			.colors=0x0f00,
+			.colors=0x00f0,
 		},
 	},
 

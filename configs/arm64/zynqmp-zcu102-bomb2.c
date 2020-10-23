@@ -22,7 +22,7 @@
 #define BOMB_ID             2
 #define BOMB_CPU            1 << (BOMB_ID + 1)
 #define MAIN_SIZE           0x500000
-#define MAIN_PHYS_START     (0x801200000 + BOMB_ID * 16 * MAIN_SIZE)
+#define MAIN_PHYS_START     (0x4801200000UL + BOMB_ID * 16 * MAIN_SIZE)
 #define COMM_PHYS_ADDR      (0x820000000 + BOMB_ID * 0x1000)
 
 struct {
@@ -61,7 +61,7 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED,
 		},
-		
+
 		/* Main RAM */
 		{
 			.phys_start = MAIN_PHYS_START,
@@ -70,7 +70,7 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 			JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
 		},
-		
+
 		/* Control interface */ {
 			.phys_start = COMM_PHYS_ADDR,
 			.virt_start = 0x500000,
