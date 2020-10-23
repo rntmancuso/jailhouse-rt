@@ -49,6 +49,7 @@
 
 #define MAIR_ATTR_SHIFT(__n)	((__n) << 3)
 #define MAIR_ATTR(__n, __attr)	((__attr) << MAIR_ATTR_SHIFT(__n))
+//#define MAIR_ATTR_WBRWA		0xff
 #define MAIR_ATTR_WBRWA		0xff
 #define MAIR_ATTR_DEVICE	0x00    /* nGnRnE */
 

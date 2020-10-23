@@ -383,7 +383,7 @@ el1_trap:
 .macro handle_fiq exit_reason
 	.align	7
 	dsb     sy
-	eret 
+	eret
 .endm
 
 
@@ -400,7 +400,7 @@ hyp_vectors:
 
 	handle_vmexit arch_el2_abt
 	handle_vmexit irqchip_handle_irq
-	handle_fiq EXIT_REASON_EL2_FIQ	
+	handle_fiq EXIT_REASON_EL2_FIQ
 	ventry	.
 
 	handle_vmexit arch_handle_trap
