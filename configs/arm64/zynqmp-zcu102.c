@@ -74,8 +74,10 @@ struct {
 	.mem_regions = {
 		/* IVSHMEM shared memory region for 0001:00:00.0 */
 		JAILHOUSE_SHMEM_NET_REGIONS(0x800400000, 0),
+
 		/* IVSHMEM shared memory region for 0001:00:01.0 */
 		JAILHOUSE_SHMEM_NET_REGIONS(0x800500000, 0),
+
 		/* MMIO (permissive) */ {
 			.phys_start = 0xfd000000,
 			.virt_start = 0xfd000000,
@@ -83,6 +85,7 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO,
 		},
+
 		/* RAM */ {
 			.phys_start = 0x0,
 			.virt_start = 0x0,
@@ -90,13 +93,29 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE,
 		},
+
 		/* For LPD Port */ {
 			.phys_start = 0x80000000,
 			.virt_start = 0x80000000,
 			.size = 0x4000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | 
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_IO,
 		},
+
+		/* For HPM0 Port */ {
+			.phys_start = 0x1000000000,
+			.virt_start = 0x1000000000,
+			.size = 0x80000000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* For HPM1 Port */ {
+			.phys_start = 0x4800000000,
+			.virt_start = 0x4800000000,
+			.size = 0x80000000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
 		/* RAM */ {
 			.phys_start = 0x800600000,
 			.virt_start = 0x800600000,
@@ -104,6 +123,7 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE,
 		},
+
 		/* PCI host bridge */ {
 			.phys_start = 0x8000000000,
 			.virt_start = 0x8000000000,
@@ -144,13 +164,6 @@ struct {
 			.phys_start = 0xff9a0200,
 			.virt_start = 0xff9a0200,
 			.size = 0x100,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-		},
-
-		/* For HPM  */ {
-			.phys_start = 0x400000000,
-			.virt_start = 0x400000000,
-			.size = 0x40000000,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
 		},
 
