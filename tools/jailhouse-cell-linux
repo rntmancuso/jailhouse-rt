@@ -22,7 +22,7 @@ sys.path[0] = os.path.dirname(os.path.abspath(__file__)) + "/.."
 from pyjailhouse.cell import JailhouseCell
 import pyjailhouse.config_parser as config_parser
 
-libexecdir = None
+libexecdir = "./inmates/tools/arm64/"
 
 
 def page_align(value, page_size=0x1000):
@@ -341,7 +341,15 @@ class ARMCommon:
                        if region.is_ram() and region.size >= image_size]
         if not ram_regions:
             print('No space found to load all images', file=sys.stderr)
+            print("region.size: %d " % region.size , file=sys.stderr)
+            print("image_size: %d " % image_size , file=sys.stderr)
+            print("ram_regions: %d " % len(ram_regions) , file=sys.stderr)
             exit(1)
+
+
+        # if not ram_regions:
+        #     print('No space found to load all images', file=sys.stderr)
+        #     exit(1)
 
         self._dtb_addr = ram_regions[0].virt_start
         if self._dtb_addr == 0:
@@ -731,7 +739,7 @@ if args.write_params:
     arch.write_params(args, config)
 else:
     if libexecdir:
-        linux_loader = libexecdir + '/jailhouse/linux-loader.bin'
+        linux_loader = libexecdir + 'linux-loader.bin'
     else:
         linux_loader = os.path.abspath(os.path.dirname(sys.argv[0])) + \
             '/../inmates/tools/' + arch.name + '/linux-loader.bin'

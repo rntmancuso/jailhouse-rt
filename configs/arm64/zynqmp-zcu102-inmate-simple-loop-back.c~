@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Configuration for linux-demo inmate on ZynqMP ZCU102:
- * 2 CPUs, 128M RAM, serial port 2
+ * Configuration for demo inmate on Xilinx ZynqMP ZCU102 eval board:
+ * 1 CPU, 64K RAM, 1 serial port
  *
- * Copyright (c) Siemens AG, 2014-2016
+ * Copyright (c) Siemens AG, 2016
  *
  * Authors:
  *  Jan Kiszka <jan.kiszka@siemens.com>
@@ -16,43 +16,43 @@
 #include <jailhouse/types.h>
 #include <jailhouse/cell-config.h>
 
+
+#define INMATE_CPU          0x8  //last cpu
+#define MAIN_SIZE           0x40000000//0x60000000 //1.5 GB
+#define MAIN_PHYS_START     0x4801200000 //HPM1 -> TransRouter 
+#define COMM_PHYS_ADDR      0x820000000 
+
 struct {
 	struct jailhouse_cell_desc cell;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[12];
-	struct jailhouse_irqchip irqchips[1];
-	struct jailhouse_pci_device pci_devices[2];
+	struct jailhouse_memory mem_regions[2];
+	struct jailhouse_memory_colored col_mem[1];
 } __attribute__((packed)) config = {
 	.cell = {
 		.signature = JAILHOUSE_CELL_DESC_SIGNATURE,
 		.revision = JAILHOUSE_CONFIG_REVISION,
-		.name = "ZynqMP-linux-demo",
+		.name = "inmate-demo",
 		.flags = JAILHOUSE_CELL_PASSIVE_COMMREG,
 
 		.cpu_set_size = sizeof(config.cpus),
 		.num_memory_regions = ARRAY_SIZE(config.mem_regions),
-		.num_irqchips = ARRAY_SIZE(config.irqchips),
-		.num_pci_devices = ARRAY_SIZE(config.pci_devices),
-
-		.vpci_irq_base = 140-32,
+		.num_memory_regions_colored = ARRAY_SIZE(config.col_mem),
+		.num_irqchips = 0,
+		.num_pci_devices = 0,
 
 		.console = {
 			.address = 0xff010000,
-			.type= JAILHOUSE_CON_TYPE_XUARTPS,
+			.type = JAILHOUSE_CON_TYPE_XUARTPS,
 			.flags = JAILHOUSE_CON_ACCESS_MMIO |
 				 JAILHOUSE_CON_REGDIST_4,
 		},
 	},
 
 	.cpus = {
-		0xc,
+		INMATE_CPU,
 	},
 
 	.mem_regions = {
-		/* IVSHMEM shared memory region for 00:01.0 */
-		JAILHOUSE_SHMEM_NET_REGIONS(0x800400000, 1),
-		/* IVSHMEM shared memory region for 00:03.0 */
-		JAILHOUSE_SHMEM_NET_REGIONS(0x800700000, 0),
 		/* UART */ {
 			.phys_start = 0xff010000,
 			.virt_start = 0xff010000,
@@ -60,21 +60,23 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED,
 		},
-		/* RAM */ {
+		
+	       /* RAM */ {
 			.phys_start = 0x801200000,
+		 	.virt_start = 0,
+		 	.size = 0x00010000,
+		 	.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+		 		JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
+		 },
+
+		/* Main Ram*/{  
+			.phys_start = MAIN_PHYS_START,
 			.virt_start = 0,
-			.size = 0x10000,
+			.size = MAIN_SIZE,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
+			JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
 		},
-		/* RAM */ {
-			.phys_start = 0x810000000,
-			.virt_start = 0x810000000,
-			.size = 0x60000000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA |
-				JAILHOUSE_MEM_LOADABLE,
-		},
+		 
 		/* communication region */ {
 			.virt_start = 0x80000000,
 			.size = 0x00001000,
@@ -82,6 +84,23 @@ struct {
 				JAILHOUSE_MEM_COMM_REGION,
 		},
 	},
+
+	/* .col_mem = { */
+	/* 	{ */
+	/* 		/\* RAM *\/ */
+	/* 		.memory = { */
+	/* 			.phys_start = MAIN_PHYS_START, */
+	/* 			.virt_start = 0, */
+	/* 			.size = MAIN_SIZE, */
+	/* 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | */
+	/* 				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE, */
+	/* 		}, */
+
+	/* 		/\* Assigning one-fourth of the colors *\/ */
+	/* 		.colors=0x000f, */
+	/* 	}, */
+	/* }, */
+
 
 	.irqchips = {
 		/* GIC */ {
@@ -116,4 +135,7 @@ struct {
 			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
 		},
 	},
+
+
+
 };

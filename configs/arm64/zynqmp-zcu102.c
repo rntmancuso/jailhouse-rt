@@ -20,7 +20,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[24];
+	struct jailhouse_memory mem_regions[17];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[2];
 } __attribute__((packed)) config = {
@@ -42,7 +42,6 @@ struct {
 		.platform_info = {
 			.pci_mmconfig_base = 0xfc000000,
 			.pci_mmconfig_end_bus = 0,
-
 			.pci_is_virtual = 1,
 			.pci_domain = -1,
 			.arm = {
@@ -74,10 +73,8 @@ struct {
 	.mem_regions = {
 		/* IVSHMEM shared memory region for 0001:00:00.0 */
 		JAILHOUSE_SHMEM_NET_REGIONS(0x800400000, 0),
-
 		/* IVSHMEM shared memory region for 0001:00:01.0 */
 		JAILHOUSE_SHMEM_NET_REGIONS(0x800500000, 0),
-
 		/* MMIO (permissive) */ {
 			.phys_start = 0xfd000000,
 			.virt_start = 0xfd000000,
@@ -85,7 +82,6 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO,
 		},
-
 		/* RAM */ {
 			.phys_start = 0x0,
 			.virt_start = 0x0,
@@ -93,29 +89,6 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE,
 		},
-
-		/* For LPD Port */ {
-			.phys_start = 0x80000000,
-			.virt_start = 0x80000000,
-			.size = 0x4000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_IO,
-		},
-
-		/* For HPM0 Port */ {
-			.phys_start = 0x1000000000,
-			.virt_start = 0x1000000000,
-			.size = 0x80000000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-		},
-
-		/* For HPM1 Port */ {
-			.phys_start = 0x4800000000,
-			.virt_start = 0x4800000000,
-			.size = 0x80000000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-		},
-
 		/* RAM */ {
 			.phys_start = 0x800600000,
 			.virt_start = 0x800600000,
@@ -123,7 +96,6 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE,
 		},
-
 		/* PCI host bridge */ {
 			.phys_start = 0x8000000000,
 			.virt_start = 0x8000000000,
