@@ -377,7 +377,7 @@ static int load_image(struct cell *cell,
 		}
 
 		if (regions > 0) {
-			phys_start = (ROOT_MAP_OFFSET + image_offset) & PAGE_MASK;
+			phys_start = (col_mem->memory.virt_start + (ROOT_MAP_OFFSET + image_offset)) & PAGE_MASK;
 			page_offs = offset_in_page(image_offset);
 			image_mem = jailhouse_ioremap(phys_start, 0,
 					      PAGE_ALIGN(image.size + page_offs));
