@@ -642,12 +642,12 @@ static int cell_start(struct per_cpu *cpu_data, unsigned long id)
 		err = coloring_cell_start(cell);
 		if (err)
 			goto out_resume;
-
+		
 		config_commit(NULL);
 
 		cell->loadable = false;
 	}
-
+	
 	/*
 	 * Present a consistent Communication Region state to the cell. Zero the
 	 * whole region as it might be dirty. This implies:
@@ -723,7 +723,7 @@ static int cell_set_loadable(struct per_cpu *cpu_data, unsigned long id)
 
 	err = coloring_cell_load(cell);
 	if (err)
-		goto out_resume;
+		goto out_resume;	
 
 	config_commit(NULL);
 
@@ -938,10 +938,12 @@ static int cpu_get_info(struct per_cpu *cpu_data, unsigned long cpu_id,
 
 static void test_translation(unsigned long addr)
 {
-        unsigned long par;
-        asm volatile("at s12e1r, %0" : : "r"(addr));
-        arm_read_sysreg(PAR_EL1, par);
-        printk("[DEBUG] Translated 0x%08lx -> 0x%08lx\n", addr, par);
+	unsigned long par;
+	asm volatile("at s12e1r, %0" : : "r"(addr));
+
+	arm_read_sysreg(PAR_EL1, par);
+
+	printk("[DEBUG] Translated 0x%08lx -> 0x%08lx\n", addr, par);
 }
 
 /**
@@ -988,8 +990,9 @@ long hypercall(unsigned long code, unsigned long arg1, unsigned long arg2)
 	case JAILHOUSE_HC_QOS:
 		return qos_call(arg1, arg2);
 	case (JAILHOUSE_HC_QOS+1):
-        test_translation(arg1);
-        return 0;
+		test_translation(arg1);
+		return 0;
+		
 	default:
 		return -ENOSYS;
 	}
