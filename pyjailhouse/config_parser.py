@@ -104,6 +104,61 @@ class MemRegion:
         return region.virt_address_in_region(self.virt_start) or \
             self.virt_address_in_region(region.virt_start)
 
+class MemRegionColored:
+    _REGION_FORMAT = 'QQQQQ'
+    SIZE = struct.calcsize(_REGION_FORMAT)
+
+    def __init__(self, region_struct):
+        (self.phys_start,
+         self.virt_start,
+         self.size,
+         self.flags,
+         self.colors) = \
+            struct.unpack_from(MemRegionColored._REGION_FORMAT, region_struct)
+
+    def __str__(self):
+        return ("  phys_start: 0x%016x\n" % self.phys_start) + \
+               ("  virt_start: 0x%016x\n" % self.virt_start) + \
+               ("  size:       0x%016x\n" % self.size) + \
+               ("  flags:      " + flag_str(JAILHOUSE_MEM, self.flags)) + "\n" + \
+               ("  colors:     0x%016x\n" % self.colors)
+
+    def is_ram(self):
+        return ((self.flags & (JAILHOUSE_MEM.READ |
+                               JAILHOUSE_MEM.WRITE |
+                               JAILHOUSE_MEM.EXECUTE |
+                               JAILHOUSE_MEM.DMA |
+                               JAILHOUSE_MEM.IO |
+                               JAILHOUSE_MEM.COMM_REGION |
+                               JAILHOUSE_MEM.ROOTSHARED)) ==
+                (JAILHOUSE_MEM.READ |
+                 JAILHOUSE_MEM.WRITE |
+                 JAILHOUSE_MEM.EXECUTE |
+                 JAILHOUSE_MEM.DMA))
+
+    def is_comm_region(self):
+        return (self.flags & JAILHOUSE_MEM.COMM_REGION) != 0
+
+    def phys_address_in_region(self, address):
+        return address >= self.phys_start and \
+            address < (self.phys_start + self.size)
+
+    def phys_overlaps(self, region):
+        if self.size == 0 or region.size == 0:
+            return False
+        return region.phys_address_in_region(self.phys_start) or \
+            self.phys_address_in_region(region.phys_start)
+
+    def virt_address_in_region(self, address):
+        return address >= self.virt_start and \
+            address < (self.virt_start + self.size)
+
+    def virt_overlaps(self, region):
+        if self.size == 0 or region.size == 0:
+            return False
+        return region.virt_address_in_region(self.virt_start) or \
+            self.virt_address_in_region(region.virt_start)
+
 
 class CacheRegion:
     _REGION_FORMAT = 'IIBxH'
@@ -173,7 +228,15 @@ class CellConfig:
                     MemRegion(self.data[mem_region_offs:]))
                 mem_region_offs += MemRegion.SIZE
 
-            irqchip_offs = mem_region_offs + \
+            col_mem_region_offs = mem_region_offs
+            self.memory_regions_colored = []
+            for n in range(self.num_memory_regions_colored):
+                self.memory_regions_colored.append(
+                    MemRegionColored(self.data[col_mem_region_offs:]))
+                print(self.memory_regions_colored[-1])
+                col_mem_region_offs += MemRegionColored.SIZE
+
+            irqchip_offs = col_mem_region_offs + \
                 self.num_cache_regions * CacheRegion.SIZE
             self.irqchips = []
             for n in range(self.num_irqchips):
