@@ -340,16 +340,14 @@ class ARMCommon:
         ram_regions = [region for region in config.memory_regions
                        if region.is_ram() and region.size >= image_size]
         if not ram_regions:
-            print('No space found to load all images', file=sys.stderr)
-            print("region.size: %d " % region.size , file=sys.stderr)
-            print("image_size: %d " % image_size , file=sys.stderr)
-            print("ram_regions: %d " % len(ram_regions) , file=sys.stderr)
-            exit(1)
 
+            print("Scanning colored memory regions...");
+            ram_regions = [region for region in config.memory_regions_colored
+                           if region.is_ram() and region.size >= image_size]
 
-        # if not ram_regions:
-        #     print('No space found to load all images', file=sys.stderr)
-        #     exit(1)
+            if not ram_regions:
+                print('No space found to load all images', file=sys.stderr)
+                exit(1)
 
         self._dtb_addr = ram_regions[0].virt_start
         if self._dtb_addr == 0:
@@ -386,6 +384,14 @@ class ARMCommon:
             if region.is_ram() and \
                (region.virt_start > 0 or region.size > 0x10000):
                 reg += struct.pack(reg_format, region.virt_start, region.size)
+
+        for region in config.memory_regions_colored:
+            # Filter out non-RAM regions and small ones at the start of the
+            # cell address space that is used for the loader.
+            if region.is_ram() and \
+               (region.virt_start > 0 or region.size > 0x10000):
+                reg += struct.pack(reg_format, region.virt_start, region.size)
+
         self.dtb.set_prop('/memory', 'reg', reg)
 
         if args.cmdline:
