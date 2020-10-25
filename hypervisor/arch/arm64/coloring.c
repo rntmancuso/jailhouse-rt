@@ -482,9 +482,10 @@ int __coloring_cell_apply_to_col_mem(struct cell *cell, col_operation type, void
 	for_each_col_mem_region(col_mem, cell->config, n) {
 		col_print("Colored OP %d: "
 			  "PHYS 0x%08llx -> VIRT 0x%08llx "
-			  "(COL: 0x%08llx, extra: %p)\n",
+			  "(SIZE: 0x%08llx, COL: 0x%08llx, extra: %p)\n",
 			  type, col_mem->memory.phys_start,
-			  col_mem->memory.virt_start, col_mem->colors, extra);
+			  col_mem->memory.virt_start,
+			  col_mem->memory.size, col_mem->colors, extra);
 
 		err = __manage_colored_region(*col_mem, cell, type, extra);
 
