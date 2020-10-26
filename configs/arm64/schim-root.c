@@ -20,7 +20,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[17];
+	struct jailhouse_memory mem_regions[20];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[2];
 } __attribute__((packed)) config = {
@@ -96,6 +96,29 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE,
 		},
+
+		/* For LPD Port */ {
+		  .phys_start = 0x80000000,
+		  .virt_start = 0x80000000,
+		  .size = 0x4000,
+		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+		  JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_IO,
+		},
+
+		/* For HPM0 Port */ {
+		  .phys_start = 0x1000000000,
+		  .virt_start = 0x1000000000,
+		  .size = 0x80000000,
+		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
+		/* For HPM1 Port */ {
+		  .phys_start = 0x4800000000,
+		  .virt_start = 0x4800000000,
+		  .size = 0x80000000,
+		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+
 		/* PCI host bridge */ {
 			.phys_start = 0x8000000000,
 			.virt_start = 0x8000000000,
