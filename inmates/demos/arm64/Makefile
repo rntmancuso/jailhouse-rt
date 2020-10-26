@@ -12,11 +12,12 @@
 
 include $(INMATES_LIB)/Makefile.lib
 
-INMATES := gic-demo.bin uart-demo.bin ivshmem-demo.bin mem-bomb.bin
+INMATES := gic-demo.bin uart-demo.bin ivshmem-demo.bin mem-bomb.bin mem-bomb-stride.bin
 
 gic-demo-y	:= ../arm/gic-demo.o
 uart-demo-y	:= ../arm/uart-demo.o
 ivshmem-demo-y	:= ../ivshmem-demo.o
 mem-bomb-y	:= ../arm/mem-bomb.o
+mem-bomb-stride-y	:= ../arm/mem-bomb-stride.o
 
 $(eval $(call DECLARE_TARGETS,$(INMATES)))
