@@ -14,6 +14,7 @@
 
 #include <inmate.h>
 #include <gic.h>
+#include <asm/sysregs.h>
 #include <jailhouse/memguard-common.h>
 
 #define MEM_SIZE_MB         4 /* Memory size will be 4 MB */
@@ -66,26 +67,37 @@ void do_writes(volatile struct control * ctrl);
 /* Perform write-only iterations over the memory buffer */
 void do_reads_writes(volatile struct control * ctrl);
 
+/* Print some info about the memory setup in the inmate */
+void print_mem_info(void);
 
 /* Perform read-only iterations over the memory buffer */
 void do_reads(volatile struct control * ctrl)
 {
 	int i = 0;
 	int size = ctrl->size;
+	int loops = 0;
+	unsigned long cycles;
+	unsigned long total = 0;
 	
 	crc = 0;
 
 	if (ctrl->command & CMD_VERBOSE)
 		print("Started READ accesses with size %d.\n", size);
-	
-	while (ctrl->command & CMD_ENABLE) {		
+
+	while (ctrl->command & CMD_ENABLE) {
+		magic_timing_begin(&cycles);
 		for (i = 0; i < size; i += LINE_SIZE) {
 			crc += buffer[i];
 		}
+		magic_timing_end(&cycles);
+		++loops;
+		total += cycles;
 	}
 
-	if (ctrl->command & CMD_VERBOSE)
+	if (ctrl->command & CMD_VERBOSE) {
 		print("Done with READ accesses. Check = 0x%08llx\n", crc);
+		print("\tAvg. Time: %ld\n", total / loops);
+	}
 
 }
 
@@ -136,6 +148,28 @@ void do_reads_writes(volatile struct control * ctrl)
 
 }
 
+/* Print some info about the memory setup in the inmate */
+void print_mem_info(void)
+{
+	/* Read and print value of the SCTRL register */
+	unsigned long sctlr, tcr;
+	arm_read_sysreg(SCTLR, sctlr);
+	arm_read_sysreg(TRANSL_CONT_REG, tcr);
+
+	print("SCTLR_EL1 = 0x%08lx\n", sctlr);
+	print("TCR_EL1 = 0x%08lx\n", tcr);
+}
+
+static void test_translation(unsigned long addr)
+{
+	unsigned long par;
+	asm volatile("at s1e1r, %0" : : "r"(addr));
+
+	arm_read_sysreg(PAR_EL1, par);
+
+	print("Translated 0x%08lx -> 0x%08lx\n", addr, par);
+}
+
 
 void inmate_main(void)
 {
@@ -147,6 +181,13 @@ void inmate_main(void)
 	mg_params.flags = 1;
 	
 	print("Memory Bomb Started.\n");
+
+	print_mem_info();
+	test_translation((unsigned long)buffer);
+	jailhouse_call_arg1(JAILHOUSE_HC_QOS+1, (unsigned long)buffer);
+
+	jailhouse_call_arg1(JAILHOUSE_HC_QOS+1, (unsigned long)0x7500000UL);
+	jailhouse_call_arg1(JAILHOUSE_HC_QOS+1, (unsigned long)0x6500000UL);
 	
 	/* Main loop */
 	while(1) {

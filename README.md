@@ -1,5 +1,32 @@
-JAILHOUSE
-=========
+JAILHOUSE (Unofficial Real-Time Spinoff)
+========================================
+
+About this Repository
+---------------------
+
+This repository contains an unofficial fork of the Jailhouse
+partitioninig hypervisor that has been developed and currently used to
+test highly experimental features to improve inter-core performance
+isolation. If you decide to use this code, you should be aware that
+you are doing that at your own risk and without any official
+support. However, if you do decide to use this or a portion of this
+code, please cite the following work:
+
+> Parul Sohal, Rohan Tabish, Ulrich Drepper, Renato Mancuso, "E-WarP:
+> a System-wide Framework for Memory Bandwidth Profiling and
+> Management", in Proceedings of the 41st IEEE Real-Time Systems
+> Symposium (RTSS 2020), Houston, TX, USA, Dec. 2020,
+
+This repository is maintained by researchers and collaborators
+affiliated with the Cyber-Physical Systems Lab at Boston University
+(BU) --- Lab Director: Renato Mancuso.
+
+IMPORTANT: there exists an ongoing effort to integrate the
+experimental features introduced in this repository on the mainline
+Jailhouse repository (https://github.com/siemens/jailhouse). If you
+are interested in receiving support on how to use the real-time
+features introduced by this project, please subscribe to the official
+Jailhouse mailing list for official support.
 
 Introduction
 ------------

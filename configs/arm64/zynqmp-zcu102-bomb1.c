@@ -28,7 +28,7 @@
 struct {
 	struct jailhouse_cell_desc cell;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[4];
+	struct jailhouse_memory mem_regions[6];
 } __attribute__((packed)) config = {
 	.cell = {
 		.signature = JAILHOUSE_CELL_DESC_SIGNATURE,
@@ -66,6 +66,24 @@ struct {
 		{
 			.phys_start = MAIN_PHYS_START,
 			.virt_start = 0,
+			.size = MAIN_SIZE,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+			JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
+		},
+
+		/* Main RAM - PL */
+		{
+			.phys_start = 0x1000000000,
+			.virt_start = 0x6500000,
+			.size = MAIN_SIZE,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+			JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
+		},		
+		
+		/* Main RAM - PL */
+		{
+			.phys_start = 0x4800000000,
+			.virt_start = 0x7500000,
 			.size = MAIN_SIZE,
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 			JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
