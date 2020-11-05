@@ -53,6 +53,7 @@
 #define JAILHOUSE_HC_PREM_GUARD_SET		9
 #define JAILHOUSE_HC_MEMGUARD			10
 #define JAILHOUSE_HC_QOS			11
+#define JAILHOUSE_HC_TRANS_DEBUG		12
 
 /* Hypervisor information type */
 #define JAILHOUSE_INFO_MEM_POOL_SIZE		0

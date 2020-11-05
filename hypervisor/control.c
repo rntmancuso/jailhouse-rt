@@ -989,7 +989,7 @@ long hypercall(unsigned long code, unsigned long arg1, unsigned long arg2)
 		return memguard_call_params(arg1);
 	case JAILHOUSE_HC_QOS:
 		return qos_call(arg1, arg2);
-	case (JAILHOUSE_HC_QOS+1):
+	case JAILHOUSE_HC_TRANS_DEBUG:
 		test_translation(arg1);
 		return 0;
 	default:
