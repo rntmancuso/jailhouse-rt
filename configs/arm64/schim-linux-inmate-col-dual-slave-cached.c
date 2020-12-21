@@ -83,7 +83,7 @@ struct {
 			/* RAM */ {
 				.phys_start = 0x4800000000,
 				.virt_start = 0x800000000,
-				.size = 0x20000000,
+				.size = 0x40000000,
 				.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				         JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_DMA | JAILHOUSE_MEM_LOADABLE,
 			},
@@ -92,7 +92,7 @@ struct {
 			.colors=0x000f,
 		},
 	},
-	
+
 	.irqchips = {
 		/* GIC */ {
 			.address = 0xf9010000,
