@@ -16,13 +16,15 @@
  * Reservation via device tree: 0x800000000..0x83fffffff
  */
 
+#define COMM_PHYS_ADDR      (0x060700000)
+
 #include <jailhouse/types.h>
 #include <jailhouse/cell-config.h>
 
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[11];
+	struct jailhouse_memory mem_regions[16];
 	struct jailhouse_memory_colored col_mem[1];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[2];
@@ -108,6 +110,32 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO,
 		},
+		/* For LPD Port */ {
+		  .phys_start = 0x80000000,
+		  .virt_start = 0x80000000,
+		  .size = 0x4000,
+		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+		  JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_IO,
+		},
+		/* For HPM0 Port */ {
+		  .phys_start = 0x1000000000,
+		  .virt_start = 0x1000000000,
+		  .size = 0x80000000,
+		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+		/* For HPM1 Port */ {
+		  .phys_start = 0x4800000000,
+		  .virt_start = 0x4800000000,
+		  .size = 0x80000000,
+		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+		/* Control interface */ {
+			.phys_start = COMM_PHYS_ADDR,
+			.virt_start = COMM_PHYS_ADDR,
+			.size = 0x00004000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+			         JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED,
+		},
 	},
 
 	.col_mem = {
@@ -121,12 +149,12 @@ struct {
 				.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE,
 			},
-			
+
 			/* Assigning 3/4 of the colors */
-			.colors=0x0fff,
+			.colors=0xff00,
 		},
 	},
-	
+
 	.irqchips = {
 		/* GIC */ {
 			.address = 0xf9010000,
@@ -159,7 +187,7 @@ struct {
 			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
 		},
 	},
-	
+
 	.stream_ids = {
 		/* In SMMUv2, the IDs are a list of pairs of IDs and
 		 * masks to match against. It is important that there
@@ -175,13 +203,13 @@ struct {
 		   CoreSight
 		 */
 		(0 << 10) | 0, ((1 << 5) - 1) << 10,
-		
-		/* TBU1: 
+
+		/* TBU1:
 		   SIOU peripheral's DMA units
 		 */
 		(1 << 10) | 0, ((1 << 5) - 1) << 10,
 
-		/* TBU2: 
+		/* TBU2:
 		   LPD
 		 */
 		(2 << 10) | 0, ((1 << 5) - 1) << 10,
@@ -192,16 +220,16 @@ struct {
 		 */
 		(3 << 10) | 0, ((1 << 5) - 1) << 10,
 
-		/* TBU4: 
+		/* TBU4:
 		   S_AXI_HP{1, 2}_FPD
 		 */
 		(4 << 10) | 0, ((1 << 5) - 1) << 10,
 
-		/* TBU5: 
+		/* TBU5:
 		   S_AXI_HP3_FPD
 		   FPD DMA
 		 */
 		(5 << 10) | 0, ((1 << 5) - 1) << 10,
-		
+
 	},
 };
