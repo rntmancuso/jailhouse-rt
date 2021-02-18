@@ -586,6 +586,7 @@ static int coloring_cell_init(struct cell *cell)
 	/* If this was the root-cell, then we need to perform coloring
 	 * of the memory already loaded for Linux. Just to be safe,
 	 * expand any colored memory area. */
+	coloring_cell_flush(cell, DCACHE_CLEAN_AND_INVALIDATE);
 	if (cell == &root_cell) {
 		for_each_col_mem_region(col_mem, cell->config, n) {
 			/* Expand colored memory regions */
@@ -621,7 +622,7 @@ static int coloring_cell_init(struct cell *cell)
 	 * that it will fail due to a lack of pool pages needed to
 	 * maintain the colored mapping. */
 	err = coloring_cell_create(cell);
-
+	
 	if (err)
 		return err;
 
