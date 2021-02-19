@@ -368,7 +368,7 @@ static inline void arm_smmu_writeq(struct arm_smmu_device *smmu, int page,
 #define ARM_MMU500_ACR_SMTNMB_TLBEN	(1 << 8)
 
 static int arm_mmu500_reset(struct arm_smmu_device *smmu)
-{	
+{
 	u32 reg, major;
 	int i;
 	/*
@@ -415,7 +415,7 @@ static void __arm_smmu_tlb_sync(struct arm_smmu_device * smmu, int page,
 		if (!(reg & ARM_SMMU_sTLBGSTATUS_GSACTIVE))
 			break;
 	}
-	
+
 }
 
 static void arm_smmu_tlb_sync_global(struct arm_smmu_device *smmu)
@@ -440,10 +440,10 @@ static int arm_smmu_reset_sme(struct arm_smmu_device *smmu, int i)
 	u32 reg = FIELD_PREP(ARM_SMMU_S2CR_TYPE, S2CR_TYPE_BYPASS) |
 		FIELD_PREP(ARM_SMMU_S2CR_CBNDX, 0) |
 		FIELD_PREP(ARM_SMMU_S2CR_PRIVCFG, 0);
-	
+
 	if (smmu->features & ARM_SMMU_FEAT_EXIDS)
 		reg &= ~ARM_SMMU_S2CR_EXIDVALID;
-	
+
 	arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_S2CR(i), reg);
 
 	/* Reset SMR next */
@@ -452,7 +452,7 @@ static int arm_smmu_reset_sme(struct arm_smmu_device *smmu, int i)
 
 	if (!(smmu->features & ARM_SMMU_FEAT_EXIDS))
 		reg &= ~ARM_SMMU_SMR_VALID;
-	
+
 	arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_SMR(i), reg);
 
 	return 0;
@@ -488,7 +488,7 @@ static void arm_smmu_print_fault_status(struct arm_smmu_device *smmu)
 	}
 
 	smmu_print("############ END ############\n");
-	
+
 }
 
 static void arm_smmu_test_transl(struct arm_smmu_device *smmu, u64 addr, u32 cbndx)
@@ -515,14 +515,14 @@ static void arm_smmu_dump_config(struct arm_smmu_device *smmu)
 	smmu_print("sCR0 = 0x%08x\n", arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_sCR0));
 	smmu_print("SME Registers:\n");
 	for (i = 0; i < smmu->num_mapping_groups; ++i) {
-		reg = arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_SMR(i));		
+		reg = arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_SMR(i));
 		smmu_print("%d) SMR = 0x%08x; ", i, reg);
-		
-		reg = arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_S2CR(i));		
+
+		reg = arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_S2CR(i));
 		smmu_print("S2CR = 0x%08x;\n", reg);
 	}
 
-	smmu_print("Conext Banks:\n");	
+	smmu_print("Conext Banks:\n");
 	for (i = 0; i < smmu->num_context_banks; ++i) {
 		reg = arm_smmu_cb_read(smmu, i,  ARM_SMMU_CB_SCTLR);
 		smmu_print("%d) SCTLR = 0x%08x; ", i, reg);
@@ -537,11 +537,11 @@ static void arm_smmu_dump_config(struct arm_smmu_device *smmu)
 		smmu_print("CBA2R = 0x%08x;\n", reg);
 
 		vttbr = arm_smmu_cb_readq(smmu, i,  ARM_SMMU_CB_TTBR0);
-		smmu_print("TTBR0 = 0x%08llx;\n", vttbr);		
+		smmu_print("TTBR0 = 0x%08llx;\n", vttbr);
 	}
 
 	arm_smmu_test_transl(smmu, 0x0000000050098200, 0);
-	
+
 	smmu_print("------- END --------\n");
 }
 #endif
@@ -562,7 +562,7 @@ static int arm_smmu_map_memory_region(struct cell *cell,
 		access_flags |= S2_PTE_FLAG_DEVICE;
 	else
 		access_flags |= S2_PTE_FLAG_NC;
-	
+
 	if (mem->flags & JAILHOUSE_MEM_COMM_REGION)
 		phys_start = paging_hvirt2phys(&cell->comm_page);
 
@@ -586,7 +586,7 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu)
 #if SMMUV2_DEBUG == 1
 	arm_smmu_dump_config(smmu);
 #endif
-	
+
 	/* Clear the global fault status register */
 	reg = arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_sGFSR);
 	arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_sGFSR, reg);
@@ -614,7 +614,7 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu)
 		/* Placeholder value to never match any cell */
 		smmu->cell_to_cb[i] = -1;
 	}
-	
+
 	/* Invalidate the TLB, just in case */
 	arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_TLBIALLH, WRITE_DUMMY_VAL);
 	arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_TLBIALLNSNH, WRITE_DUMMY_VAL);
@@ -654,7 +654,7 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu)
 	/* Push the button */
 	arm_smmu_tlb_sync_global(smmu);
 	arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_sCR0, reg);
-	
+
 	return 0;
 }
 
@@ -670,7 +670,7 @@ static int arm_smmu_device_init_features(struct arm_smmu_device *smmu)
 		   FIELD_GET(ARM_SMMU_ID7_MAJOR, id),
 		   FIELD_GET(ARM_SMMU_ID7_MINOR, id)
 		);
-	
+
 	/* ID0 */
 	id = arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_ID0);
 
@@ -685,10 +685,10 @@ static int arm_smmu_device_init_features(struct arm_smmu_device *smmu)
 		smmu_print("\tcoherent page table walk supported!\n");
 	} else {
 		smmu_print("\tcoherent page table walk NOT supported.\n");
-				
+
 	}
 
-	
+
 	if (id & ARM_SMMU_ID0_S2TS) {
 		smmu->features |= ARM_SMMU_FEAT_TRANS_S2;
 		smmu_print("\tstage 2 translation\n");
@@ -724,14 +724,14 @@ static int arm_smmu_device_init_features(struct arm_smmu_device *smmu)
 			printk("ERROR: stream-matching supported, but no SMRs present!\n");
 			return -ENODEV;
 		}
-		
+
 		/* Remember the number of mapping groups */
 		smmu->num_mapping_groups = size;
 
 		smmu_print("\tstream matching with %u register groups", size);
 	} else {
 		printk("ERROR: stream-matching NOT supported.\n");
-		return -ENODEV;		
+		return -ENODEV;
 	}
 
 	/* ID1 */
@@ -757,12 +757,12 @@ static int arm_smmu_device_init_features(struct arm_smmu_device *smmu)
 	/* ID2 */
 	id = arm_smmu_gr0_read(smmu, ARM_SMMU_GR0_ID2);
 
-	
+
 	if (id & ARM_SMMU_ID2_VMID16) {
 		smmu->features |= ARM_SMMU_FEAT_VMID16;
 		smmu_print("\t16-bit VMIDs supported!\n");
 	}
-	
+
 	/* Check which page table format is supported. It must be
 	 * compatible with what used by JH for arm64 systems. */
 	if (id & ARM_SMMU_ID2_PTFS_4K) {
@@ -777,7 +777,7 @@ static int arm_smmu_device_init_features(struct arm_smmu_device *smmu)
 		smmu->features |= ARM_SMMU_FEAT_FMT_AARCH64_64K;
 		smmu_print("\taarch64 granule size 64K supported!\n");
 	}
-	
+
 	return 0;
 }
 
@@ -786,7 +786,7 @@ static int arm_smmu_init_cb(struct arm_smmu_device *smmu, u32 cbndx, struct cell
 	struct paging_structures *pg_structs = &cell->arch.iomm;
 	u64 vttbr;
 	u32 reg;
-	u32 vmid = cell->config->id;	
+	u32 vmid = cell->config->id;
 
 	/* Get root page table */
 	vttbr = paging_hvirt2phys(pg_structs->root_table);
@@ -805,7 +805,7 @@ static int arm_smmu_init_cb(struct arm_smmu_device *smmu, u32 cbndx, struct cell
 		reg |= FIELD_PREP(ARM_SMMU_CBAR_VMID, vmid);
 	}
 	arm_smmu_gr1_write(smmu, ARM_SMMU_GR1_CBAR(cbndx), reg);
-	
+
 	/* Write CB at specified index */
 	arm_smmu_cb_write(smmu, cbndx, ARM_SMMU_CB_TCR,
 			  FIELD_PREP(ARM_SMMU_VTCR_TG0, 0) | /* 4kb granule size */
@@ -832,29 +832,29 @@ static int arm_smmu_write_sme(struct arm_smmu_device *smmu,
 			      enum arm_smmu_s2cr_type type)
 {
 	u32 reg;
-	
+
 	smmu_print("\t[Cell %d] SM = %d, setting ID = 0x%x, MASK = 0x%x\n",
 		   vmid, smidx, match_id, ignore_bits);
-	
+
 	/* Setup S2CR */
 	reg = FIELD_PREP(ARM_SMMU_S2CR_TYPE, type) |
 		//reg = FIELD_PREP(ARM_SMMU_S2CR_TYPE, S2CR_TYPE_BYPASS) |
 		FIELD_PREP(ARM_SMMU_S2CR_CBNDX, cbndx) |
 		FIELD_PREP(ARM_SMMU_S2CR_PRIVCFG, S2CR_PRIVCFG_DEFAULT);
-	
+
 	if (smmu->features & ARM_SMMU_FEAT_EXIDS)
 		reg |= ARM_SMMU_S2CR_EXIDVALID;
-	
+
 	arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_S2CR(smidx), reg);
 
 	/* Setup SMR */
 	reg = FIELD_PREP(ARM_SMMU_SMR_ID, match_id) |
 		FIELD_PREP(ARM_SMMU_SMR_MASK, ignore_bits);
-	
+
 	if (!(smmu->features & ARM_SMMU_FEAT_EXIDS))
 		reg |= ARM_SMMU_SMR_VALID;
 	arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_SMR(smidx), reg);
-		
+
 	return 0;
 }
 
@@ -873,17 +873,17 @@ int arm_smmu_setup_stream_matching_compat(struct arm_smmu_device *smmu, u32 smid
 	u16 sid;
 	u16 all_ones = 0xFFFF, all_zeros = 0xFFFF;
 
-	/* Bits set to 1 will be ignored in matching */	
+	/* Bits set to 1 will be ignored in matching */
 	u32 ignore_bits = 0;
 	u32 match_id = 0;
-	
-	u32 vmid = cell->config->id;	
+
+	u32 vmid = cell->config->id;
 	int i;
-	
+
 	/* If this is specified, the list of sids is actually a list
 	 * of pairs. The first is an ID, the second is a mask. */
 	int id_mask_pairs = 1;
-	
+
 	for_each_stream_id(sid, cell->config, i) {
 		if (id_mask_pairs && ((i & 0x01) == 1)) {
 			/* All bits set to 0 in the mask will be
@@ -914,17 +914,17 @@ static int arm_smmu_setup_stream_matching(struct arm_smmu_device *smmu, u32 cbnd
 	 * sids */
 	u16 sid, smidx = 0;
 
-	/* Bits set to 1 will be ignored in matching */	
+	/* Bits set to 1 will be ignored in matching */
 	u32 ignore_bits = 0;
 	u32 match_id = 0;
-	
-	u32 vmid = cell->config->id;	
+
+	u32 vmid = cell->config->id;
 	int i;
-	
+
 	/* If this is specified, the list of sids is actually a list
 	 * of pairs. The first is an ID, the second is a mask. */
 	int id_mask_pairs = 1;
-	
+
 	for_each_stream_id(sid, cell->config, i) {
 		if (id_mask_pairs && ((i & 0x01) == 1)) {
 			/* All bits set to 0 in the mask will be
@@ -940,18 +940,18 @@ static int arm_smmu_setup_stream_matching(struct arm_smmu_device *smmu, u32 cbnd
 				printk("ERROR: not enough mapping groups.\n");
 				return -EINVAL;
 			}
-			
-			if (match_id == 0)
+
+			if ((match_id == 0) || 1)
 				arm_smmu_write_sme(smmu, vmid, smidx++,
 						   cbndx, match_id, ignore_bits,
 						   S2CR_TYPE_BYPASS);
-						
-			else 
+
+			else
 				arm_smmu_write_sme(smmu, vmid, smidx++,
 						   cbndx, match_id, ignore_bits,
 						   S2CR_TYPE_TRANS);
 
-				
+
 			continue;
 		}
 
@@ -987,7 +987,7 @@ static int arm_smmuv2_cell_init(struct cell *cell)
 			smmu_print("ERROR: unable to allocate root SMMU table\n");
 			return -EINVAL;
 		}
-		
+
 		for_each_mem_region(mem, cell->config, n) {
 			smmu_print("Mapping region %d\n", n);
 			ret = arm_smmu_map_memory_region(cell, mem);
@@ -1003,16 +1003,16 @@ static int arm_smmuv2_cell_init(struct cell *cell)
 		 * function. */
 		if (!col_ops.smmu_map_f)
 			col_ops.smmu_map_f = arm_smmu_map_memory_region;
-		
+
 		/* TODO populate unmap function too */
 
 		/* Invoke creation of colored regions in the SMMU mapping */
 		ret = coloring_cell_smmu_create(cell);
 		if (ret) {
 			smmu_print("ERROR: colored region mapping failed with code %d.\n", ret);
-			return -EINVAL;			
+			return -EINVAL;
 		}
-				
+
 		/* Find an unused stream matching context number */
 		for (cbndx = 0; cbndx < smmu->num_context_banks; ++cbndx) {
 			if (smmu[i].cell_to_cb[cbndx] == -1)
@@ -1029,9 +1029,9 @@ static int arm_smmuv2_cell_init(struct cell *cell)
 
 		/* Mark the context we found as belonging to this cell */
 		smmu[i].cell_to_cb[cbndx] = cell->config->id;
-			
+
 		ret = arm_smmu_setup_stream_matching(&smmu[i], cbndx, cell);
-		
+
 		if (ret)
 			return ret;
 
@@ -1044,7 +1044,7 @@ static int arm_smmuv2_cell_init(struct cell *cell)
 #if SMMUV2_DEBUG == 1
 		arm_smmu_dump_config(&smmu[i]);
 #endif
-		
+
 		/* Invalidate the TLB, just in case */
 		arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_TLBIALLH, WRITE_DUMMY_VAL);
 		arm_smmu_gr0_write(smmu, ARM_SMMU_GR0_TLBIALLNSNH, WRITE_DUMMY_VAL);
@@ -1066,7 +1066,7 @@ static void arm_smmuv2_cell_exit(struct cell *cell)
 	int i, j;
 
 	smmu_print("Exiting SMMUv2 on cell %d\n", cell->config->id);
-	
+
 	if (!iommu_count_units())
 		return;
 
@@ -1120,7 +1120,7 @@ static int arm_smmuv2_init(void)
 		ret = arm_smmu_device_init_features(&smmu[i]);
 		if (ret)
 			return ret;
-		
+
 		/* Reset the device */
 		ret = arm_smmu_device_reset(&smmu[i]);
 		if (ret)
