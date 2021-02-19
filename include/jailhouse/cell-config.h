@@ -136,6 +136,7 @@ struct jailhouse_memory {
 struct jailhouse_memory_colored {
 	struct jailhouse_memory memory;
 	__u64 colors;
+	__u64 rebase_offset;
 } __attribute__((packed));
 
 #define JAILHOUSE_SHMEM_NET_REGIONS(start, dev_id)			\
