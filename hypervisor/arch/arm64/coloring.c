@@ -196,7 +196,7 @@ static void colored_copy(const struct jailhouse_memory_colored * col_mem)
 			   virt_addr = col_mem->memory.virt_start;
 //			col_print("\tline 193\n");
 			/* cannot fail, mapping area is preallocated */
-			paging_create(&this_cpu_data()->pg_structs, phys_addr,
+			paging_create(&this_cpu_data()->pg_structs, phys_addr - col_mem->rebase_offset,
 				      size, TEMPORARY_MAPPING_BASE,
 				      PAGE_DEFAULT_FLAGS,
 				      PAGING_NON_COHERENT | PAGING_NO_HUGE);
@@ -244,7 +244,7 @@ static void colored_uncopy(const struct jailhouse_memory_colored * col_mem)
 				   NUM_TEMPORARY_PAGES * PAGE_SIZE);
 
 			/* cannot fail, mapping area is preallocated */
-			paging_create(&this_cpu_data()->pg_structs, phys_addr,
+			paging_create(&this_cpu_data()->pg_structs, phys_addr - col_mem->rebase_offset,
 				      size, TEMPORARY_MAPPING_BASE,
 				      PAGE_DEFAULT_FLAGS,
 				      PAGING_NON_COHERENT | PAGING_NO_HUGE);
@@ -622,7 +622,7 @@ static int coloring_cell_init(struct cell *cell)
 	 * that it will fail due to a lack of pool pages needed to
 	 * maintain the colored mapping. */
 	err = coloring_cell_create(cell);
-	
+
 	if (err)
 		return err;
 
