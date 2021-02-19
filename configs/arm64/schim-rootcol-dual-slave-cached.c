@@ -142,7 +142,7 @@ struct {
 		{
 			/* Linux RAM */
 			.memory = {
-				.phys_start = 0x040000000,
+				.phys_start = 0x10000,
 				.virt_start = 0x0,
 				.size = 0x40000000, /* 1024 MB */
 				/* .size = 0x80000000, */
@@ -151,7 +151,8 @@ struct {
 			},
 
 			/* Assigning 3/4 of the colors */
-			.colors=0xffff,
+			.colors = 0xfff0,
+			.rebase_offset = 0x10000,
 		},
 	},
 
