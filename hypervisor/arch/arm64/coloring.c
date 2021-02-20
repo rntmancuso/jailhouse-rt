@@ -25,7 +25,7 @@
 #include <jailhouse/mmio.h>
 #include <asm/coloring.h>
 
-#define SCHIM_RECOLORING_ENABLE 1
+#define SCHIM_RECOLORING_ENABLE 0
 
 #define col_print(fmt, ...)			\
 	printk("[COL] " fmt, ##__VA_ARGS__)
