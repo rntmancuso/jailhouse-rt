@@ -149,8 +149,8 @@ struct {
 				JAILHOUSE_MEM_EXECUTE,
 			},
 
-			/* Assigning 3/4 of the colors */
-			.colors = 0xffff,
+			/* Assigning 1/4 of the colors */
+			.colors = 0xf000,
 			.rebase_offset = 0x1000000000,
 		},
 	},
