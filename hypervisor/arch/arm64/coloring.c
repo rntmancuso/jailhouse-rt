@@ -25,7 +25,7 @@
 #include <jailhouse/mmio.h>
 #include <asm/coloring.h>
 
-#define SCHIM_RECOLORING_ENABLE 0
+#define SCHIM_RECOLORING_ENABLE 1
 
 #define col_print(fmt, ...)			\
 	printk("[COL] " fmt, ##__VA_ARGS__)
@@ -111,7 +111,7 @@ static int coloring_cache_detect(void)
 		arm_write_sysreg(csselr_el1, FIELD_PREP(CSSELR_LEVEL, i-1));
 		arm_read_sysreg(ccsidr_el1, geom);
 
-		/* Parse info about this level */
+	/* Parse info about this level */
 		ls = 1 << (4 + FIELD_GET(CCSIDR_LINE_SIZE, geom));
 		assoc = FIELD_GET(CCSIDR_ASSOC, geom) + 1;
 		sets = FIELD_GET(CCSIDR_NUM_SETS, geom) + 1;
@@ -586,7 +586,8 @@ static int coloring_cell_init(struct cell *cell)
 	/* If this was the root-cell, then we need to perform coloring
 	 * of the memory already loaded for Linux. Just to be safe,
 	 * expand any colored memory area. */
-	coloring_cell_flush(cell, DCACHE_CLEAN_AND_INVALIDATE);
+	//coloring_cell_flush(cell, DCACHE_CLEAN_AND_INVALIDATE);
+	arm_l1l2_caches_flush();
 	if (cell == &root_cell) {
 		for_each_col_mem_region(col_mem, cell->config, n) {
 			/* Expand colored memory regions */
