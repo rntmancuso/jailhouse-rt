@@ -22,8 +22,8 @@
 #define BOMB_ID             2
 #define BOMB_CPU            1 << (BOMB_ID + 1)
 #define MAIN_SIZE           0x500000
-#define MAIN_PHYS_START     (0x4840000000 + BOMB_ID * 16 * MAIN_SIZE)
-#define COMM_PHYS_ADDR      (0x060700000 + BOMB_ID * 0x1000)
+#define MAIN_PHYS_START     (0x0840000000 + BOMB_ID * 16 * MAIN_SIZE) // 0x4840000000
+#define COMM_PHYS_ADDR      (0x801200000 + BOMB_ID * 0x1000)
 
 struct {
 	struct jailhouse_cell_desc cell;
@@ -92,6 +92,7 @@ struct {
 
 			/* Assigning 1/4 of the colors */
 			.colors=0x000f,
+			.rebase_offset = MAIN_PHYS_START,
 		},
 	},
 

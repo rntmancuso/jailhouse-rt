@@ -16,7 +16,7 @@
  * Reservation via device tree: 0x800000000..0x83fffffff
  */
 
-#define COMM_PHYS_ADDR      (0x060700000)
+#define COMM_PHYS_ADDR      (0x801200000)
 
 #include <jailhouse/types.h>
 #include <jailhouse/cell-config.h>
@@ -96,13 +96,13 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO,
 		},
-//		/* RAM */ {
-//			.phys_start = 0x801200000,
-//			.virt_start = 0x801200000,
-//			.size = 0x7ee00000,
-//			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-//				JAILHOUSE_MEM_EXECUTE,
-//		},
+		/* RAM */ {
+			.phys_start = 0x801300000,
+			.virt_start = 0x801300000,
+			.size = 0x7ed00000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+				JAILHOUSE_MEM_EXECUTE,
+		},
 		/* PCI host bridge */ {
 			.phys_start = 0x8000000000,
 			.virt_start = 0x8000000000,
