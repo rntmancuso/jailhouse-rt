@@ -184,10 +184,10 @@ void inmate_main(void)
 
 	print_mem_info();
 	test_translation((unsigned long)buffer);
-	jailhouse_call_arg1(JAILHOUSE_HC_QOS+1, (unsigned long)buffer);
-
-	jailhouse_call_arg1(JAILHOUSE_HC_QOS+1, (unsigned long)0x7500000UL);
-	jailhouse_call_arg1(JAILHOUSE_HC_QOS+1, (unsigned long)0x6500000UL);
+//	jailhouse_call_arg1(JAILHOUSE_HC_QOS+1, (unsigned long)buffer);
+//
+//	jailhouse_call_arg1(JAILHOUSE_HC_QOS+1, (unsigned long)0x7500000UL);
+//	jailhouse_call_arg1(JAILHOUSE_HC_QOS+1, (unsigned long)0x6500000UL);
 
 	/* Main loop */
 	while(1) {
