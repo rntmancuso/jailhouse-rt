@@ -92,7 +92,7 @@ struct {
 
 			/* Assigning 1/4 of the colors */
 			.colors=0x00f0,
-			.rebase_offset = MAIN_PHYS_START,
+			.rebase_offset = 0x0,
 		},
 	},
 
