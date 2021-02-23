@@ -22,7 +22,7 @@
 #define BOMB_ID             0
 #define BOMB_CPU            1 << (BOMB_ID + 1)
 #define MAIN_SIZE           0x500000
-#define MAIN_PHYS_START     (0x0040000000 + BOMB_ID * 16 * MAIN_SIZE) // 0x1040000000
+#define MAIN_PHYS_START     (0x1040000000 + BOMB_ID * 16 * MAIN_SIZE)
 #define COMM_PHYS_ADDR      (0x801200000 + BOMB_ID * 0x1000)
 
 struct {
