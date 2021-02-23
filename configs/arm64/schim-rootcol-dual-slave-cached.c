@@ -24,7 +24,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[14];
+	struct jailhouse_memory mem_regions[15];
 	struct jailhouse_memory_colored col_mem[1];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[2];
@@ -117,16 +117,16 @@ struct {
 		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 		  JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_IO,
 		},
-//		/* For HPM0 Port */ {
-//		  .phys_start = 0x1000000000,
-//		  .virt_start = 0x1000000000,
-//		  .size = 0x80000000,
-//		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-//		},
+		/* For HPM0 Port */ {
+		  .phys_start = 0x1040000000,
+		  .virt_start = 0x1040000000,
+		  .size = 0x40000000,
+		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
 		/* For HPM1 Port */ {
-		  .phys_start = 0x4800000000,
-		  .virt_start = 0x4800000000,
-		  .size = 0x80000000,
+		  .phys_start = 0x4801300000,
+		  .virt_start = 0x4801300000,
+		  .size = 0x7ed00000,
 		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
 		},
 		/* Control interface */ {
