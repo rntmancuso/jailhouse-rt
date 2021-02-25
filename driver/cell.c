@@ -87,7 +87,7 @@ retry:
 		cell->memory_regions_colored = vmalloc(sizeof(struct jailhouse_memory_colored) *
 						cell->num_memory_regions_colored);
 
-	/* Coloring support */	
+	/* Coloring support */
 	if (!cell->memory_regions && !cell->memory_regions_colored) {
 		kfree(cell);
 		return ERR_PTR(-ENOMEM);
@@ -95,7 +95,7 @@ retry:
 
 	memcpy(cell->name, cell_desc->name, JAILHOUSE_CELL_ID_NAMELEN);
 	cell->name[JAILHOUSE_CELL_ID_NAMELEN] = 0;
-	
+
 	if(cell_desc->num_memory_regions)
 		memcpy(cell->memory_regions, jailhouse_cell_mem_regions(cell_desc),
 		       sizeof(struct jailhouse_memory) * cell->num_memory_regions);
@@ -104,7 +104,7 @@ retry:
 	if(cell_desc->num_memory_regions_colored)
 		memcpy(cell->memory_regions_colored, jailhouse_cell_col_mem_regions(cell_desc),
 		       sizeof(struct jailhouse_memory_colored) * cell->num_memory_regions_colored);
-	
+
 	err = jailhouse_pci_cell_setup(cell, cell_desc);
 	if (err) {
 		vfree(cell->memory_regions);
@@ -361,7 +361,7 @@ static int load_image(struct cell *cell,
 		}
 
 	} else {
-		/* search colored regions next */	
+		/* search colored regions next */
 		col_mem = cell->memory_regions_colored;
 		/* Coloring support */
 		for (regions = cell->num_memory_regions_colored; regions > 0; regions--) {
@@ -539,7 +539,7 @@ int jailhouse_cmd_cell_destroy_non_root(void)
 static int __memguard_call_one_cpu(void * args)
 {
 	struct jailhouse_memguard_args * mg_args = (struct jailhouse_memguard_args *)args;
-	
+
 	return jailhouse_call_arg1(JAILHOUSE_HC_MEMGUARD, __pa(&mg_args->params));
 }
 
@@ -553,13 +553,13 @@ static int memguard_call(struct cell * cell, struct jailhouse_memguard_args * mg
 		err = smp_call_on_cpu(cpu, __memguard_call_one_cpu, (void *)mg_args, true);
 
 		err &= 1; //MGRET_ERROR_MASK;
-		
+
 		if (err) {
 			pr_err("Jailhouse memguard call failed on CPU %d\n", cpu);
 			return err;
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -572,10 +572,10 @@ int jailhouse_cmd_cell_memguard(struct jailhouse_memguard_args __user *arg)
 	mg_args = kmalloc(sizeof(struct jailhouse_memguard_args), GFP_USER | __GFP_NOWARN);
 	if (!mg_args)
 		return -ENOMEM;
-	
+
 	if (copy_from_user(mg_args, arg, sizeof(struct jailhouse_memguard_args)))
 		return -EFAULT;
-	
+
 	err = cell_management_prologue(&mg_args->cell_id, &cell);
 	if (err)
 		return err;
@@ -583,15 +583,15 @@ int jailhouse_cmd_cell_memguard(struct jailhouse_memguard_args __user *arg)
 	err = memguard_call(cell, mg_args);
 
 	kfree(mg_args);
-	
+
 	if (err) {
 		pr_err("Jailhouse: unable to set memguard parameters for cell \"%s\"\n",
 		       cell->name);
 		return err;
 	}
-	
+
 	mutex_unlock(&jailhouse_lock);
 
 	return err;
-	
+
 }
