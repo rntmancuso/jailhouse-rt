@@ -941,7 +941,7 @@ static int arm_smmu_setup_stream_matching(struct arm_smmu_device *smmu, u32 cbnd
 				return -EINVAL;
 			}
 
-			if ((match_id == 0) || 1)   //(match_id == (3 << 10)) ) //it was || 1 
+			if ((match_id == 0) || 1)//(match_id == (3 << 10)) ) //it was || 1 
 				arm_smmu_write_sme(smmu, vmid, smidx++,
 						   cbndx, match_id, ignore_bits,
 						   S2CR_TYPE_BYPASS);
