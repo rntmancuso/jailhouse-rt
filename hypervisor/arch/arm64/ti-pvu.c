@@ -32,6 +32,9 @@
 #include <asm/iommu.h>
 #include <asm/ti-pvu.h>
 
+#define pvu_print(fmt, ...)			\
+	printk("[PVU] " fmt, ##__VA_ARGS__)
+
 #define MAX_PVU_ENTRIES		(PAGE_SIZE / sizeof (struct pvu_tlb_entry))
 #define MAX_VIRTID		7
 
@@ -491,6 +494,7 @@ static int pvu_iommu_cell_init(struct cell *cell)
 
 static int pvu_iommu_flush_context(u16 virtid)
 {
+	pvu_print("pvu_iommu_flush_context\n");
 	unsigned int i, tlbnum, next;
 	struct pvu_dev *dev;
 
@@ -511,6 +515,7 @@ static int pvu_iommu_flush_context(u16 virtid)
 
 static void pvu_iommu_cell_exit(struct cell *cell)
 {
+	pvu_print("pvu_iommu_cell_exit\n");
 	unsigned int i, virtid;
 
 	if (pvu_count == 0)
@@ -531,6 +536,7 @@ static void pvu_iommu_cell_exit(struct cell *cell)
 
 static int pvu_iommu_init(void)
 {
+	pvu_print("pvu_iommu_init\n");
 	struct jailhouse_iommu *iommu;
 	struct pvu_dev *dev;
 	unsigned int i;
