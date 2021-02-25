@@ -22,8 +22,8 @@
 #define BOMB_ID             2
 #define BOMB_CPU            1 << (BOMB_ID + 1)
 #define MAIN_SIZE           0x500000
-#define MAIN_PHYS_START     (0x4840000000 + BOMB_ID * 16 * MAIN_SIZE)
-#define COMM_PHYS_ADDR      (0x801200000 + BOMB_ID * 0x1000)
+#define MAIN_PHYS_START     (0x4840000000)// + BOMB_ID * 16 * MAIN_SIZE)
+#define COMM_PHYS_ADDR      (0x87c000000 + BOMB_ID * 0x1000)
 
 struct {
 	struct jailhouse_cell_desc cell;
@@ -84,7 +84,7 @@ struct {
 			/* RAM */
 			.memory = {
 				.phys_start = MAIN_PHYS_START,
-				.virt_start = 0,
+				.virt_start = 0x0,
 				.size = MAIN_SIZE,
 				.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 					JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
