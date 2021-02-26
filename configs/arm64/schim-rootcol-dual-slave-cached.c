@@ -24,7 +24,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[16];
+	struct jailhouse_memory mem_regions[13];
 	struct jailhouse_memory_colored col_mem[1];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[2];
@@ -86,9 +86,9 @@ struct {
 
 	.mem_regions = {
 		/* IVSHMEM shared memory region for 0001:00:00.0 */
-		JAILHOUSE_SHMEM_NET_REGIONS(0x87d000000, 0),
+		JAILHOUSE_SHMEM_NET_REGIONS(0x087d000000, 0),
 		/* IVSHMEM shared memory region for 0001:00:01.0 */
-		JAILHOUSE_SHMEM_NET_REGIONS(0x87e000000, 0),
+		JAILHOUSE_SHMEM_NET_REGIONS(0x087e000000, 0),
 		/* MMIO (permissive) */ {
 			.phys_start = 0xfd000000,
 			.virt_start = 0xfd000000,
@@ -96,20 +96,20 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED,
 		},
-		/* RAM - Low DDR*/ {
-			.phys_start = 0x40000000,
-			.virt_start = 0x40000000,
-			.size = 0x40000000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE,
-		},
-		/* RAM - High DDR*/ {
-			.phys_start = 0x800000000,
-			.virt_start = 0x800000000,
-			.size = 0x7c000000,
-			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
-				JAILHOUSE_MEM_EXECUTE,
-		},
+//		/* RAM - Low DDR*/ {
+//			.phys_start = 0x40000000,
+//			.virt_start = 0x40000000,
+//			.size = 0x40000000,
+//			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+//				JAILHOUSE_MEM_EXECUTE,
+//		},
+//		/* RAM - High DDR*/ {
+//			.phys_start = 0x800000000,
+//			.virt_start = 0x800000000,
+//			.size = 0x7c000000,
+//			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+//				JAILHOUSE_MEM_EXECUTE,
+//		},
 		/* PCI host bridge */ {
 			.phys_start = 0x8000000000,
 			.virt_start = 0x8000000000,
@@ -124,12 +124,12 @@ struct {
 		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 		  JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_IO,
 		},
-		/* For HPM0 Port */ {
-		  .phys_start = 0x1100000000,
-		  .virt_start = 0x1100000000,
-		  .size = 0x40000000,
-		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-		},
+//		/* For HPM0 Port */ {
+//		  .phys_start = 0x1000000000,//0x1040000000,
+//		  .virt_start = 0x1000000000,//0x1040000000,
+//		  .size = 0x80000000,
+//		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+//		},
 		/* For HPM1 Port */ {
 		  .phys_start = 0x4800000000,
 		  .virt_start = 0x4800000000,
