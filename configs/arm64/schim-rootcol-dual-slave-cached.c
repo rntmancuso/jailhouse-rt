@@ -124,18 +124,24 @@ struct {
 		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 		  JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_IO,
 		},
-//		/* For HPM0 Port */ {
-//		  .phys_start = 0x1000000000,//0x1040000000,
-//		  .virt_start = 0x1000000000,//0x1040000000,
-//		  .size = 0x80000000,
-//		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-//		},
-		/* For HPM1 Port */ {
-		  .phys_start = 0x4800000000,
-		  .virt_start = 0x4800000000,
-		  .size = 0x7c000000,
+		/* For HPM0 Port */ {
+		  .phys_start = 0x1100000000,
+		  .virt_start = 0x1100000000,
+		  .size = 0x20000000,
 		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
 		},
+//		/* For HPM1 Port - before communication region*/ {
+//		  .phys_start = 0x4800000000,
+//		  .virt_start = 0x4800000000,
+//		  .size = 0x0020000000,
+//		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+//		},
+//		/* For HPM1 Port - after communication region*/ {
+//		  .phys_start = 0x4900000000,
+//		  .virt_start = 0x4900000000,
+//		  .size = 0x0020000000,
+//		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+//		},
 		/* Control interface */ {
 			.phys_start = COMM_PHYS_ADDR,
 			.virt_start = COMM_PHYS_ADDR,
@@ -147,17 +153,17 @@ struct {
 
 	.col_mem = {
 		{
-			/* Linux RAM */
+			/* Linux/root-cell RAM */
 			.memory = {
 				.phys_start = 0x1000000000,
 				.virt_start = 0x0,
-				.size = 0x0020000000,//0x0040000000, /* 1024 MB - max virt : 0x003fffc000 phys : 0x10ffff0000*/
+				.size = 0x20000000, /* 512 MB */
 				.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE,
 			},
 
 			/* Assigning 1/4 of the colors */
-			.colors = 0xf000,
+			.colors = 0x0f00,
 			.rebase_offset = 0x1000000000,
 		},
 	},
