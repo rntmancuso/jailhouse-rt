@@ -125,8 +125,8 @@ struct {
 		  JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_IO,
 		},
 		/* For HPM0 Port */ {
-		  .phys_start = 0x1100000000,
-		  .virt_start = 0x1100000000,
+		  .phys_start = 0x1000000000,
+		  .virt_start = 0x1000000000,
 		  .size = 0x20000000,
 		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
 		},
@@ -155,7 +155,7 @@ struct {
 		{
 			/* Linux/root-cell RAM */
 			.memory = {
-				.phys_start = 0x1000000000,
+				.phys_start = 0x1100000000,
 				.virt_start = 0x0,
 				.size = 0x20000000, /* 512 MB */
 				.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
@@ -164,7 +164,7 @@ struct {
 
 			/* Assigning 1/4 of the colors */
 			.colors = 0x0f00,
-			.rebase_offset = 0x1000000000,
+			.rebase_offset = 0x1100000000,
 		},
 	},
 
