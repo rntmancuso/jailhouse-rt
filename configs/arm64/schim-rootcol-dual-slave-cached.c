@@ -24,7 +24,7 @@
 struct {
 	struct jailhouse_system header;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[13];
+	struct jailhouse_memory mem_regions[15];
 	struct jailhouse_memory_colored col_mem[1];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[2];
@@ -130,18 +130,18 @@ struct {
 		  .size = 0x20000000,
 		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
 		},
-//		/* For HPM1 Port - before communication region*/ {
-//		  .phys_start = 0x4800000000,
-//		  .virt_start = 0x4800000000,
-//		  .size = 0x0020000000,
-//		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-//		},
-//		/* For HPM1 Port - after communication region*/ {
-//		  .phys_start = 0x4900000000,
-//		  .virt_start = 0x4900000000,
-//		  .size = 0x0020000000,
-//		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
-//		},
+		/* For HPM1 Port - before communication region*/ {
+		  .phys_start = 0x4800000000,
+		  .virt_start = 0x4800000000,
+		  .size = 0x0010000000, /* 128 MB */
+		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
+		/* For HPM1 Port - after communication region*/ {
+		  .phys_start = 0x4900000000,
+		  .virt_start = 0x4900000000,
+		  .size = 0x0010000000, /* 128 MB */
+		  .flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE | JAILHOUSE_MEM_EXECUTE,
+		},
 		/* Control interface */ {
 			.phys_start = COMM_PHYS_ADDR,
 			.virt_start = COMM_PHYS_ADDR,
@@ -163,7 +163,7 @@ struct {
 			},
 
 			/* Assigning 1/4 of the colors */
-			.colors = 0x0f00,
+			.colors = 0xf000,
 			.rebase_offset = 0x1100000000,
 		},
 	},
