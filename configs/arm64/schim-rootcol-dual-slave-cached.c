@@ -157,7 +157,7 @@ struct {
 			.memory = {
 				.phys_start = 0x1100000000,
 				.virt_start = 0x0,
-				.size = 0x20000000, /* 512 MB */
+				.size = 0x40000000, /* 1024 MB */
 				.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_EXECUTE,
 			},
